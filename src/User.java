@@ -1,35 +1,28 @@
-
+/**
+ * Created by Elizabeth Ip on 2017-01-11.
+ */
+import java.net.Socket;
 public class User {
+    private Socket socket;
+    private String name;
 
-	private String username;
-	private String groupName;
-	private int score=0;
-	
-	public void setUsername(String username){
-		this.username=username;
-	}
-	
-	public void setGroupName(String groupName){
-		this.groupName=groupName;
-	}
-	
-	public String getUsername(){
-		return username;
-	}
-	
-	public String getGroupName(){
-		return groupName;
-	}
-	
-	public void addScore(){
-		score++;
-	}
-	
-	public int getScore(){
-		return score;
-	}
-	
-	public String getScoreDisplay(){
-		return (username + ": " + score);
-	}
+    User(Socket s, String n){
+        socket=s;
+        name=n;
+    }
+
+    public void setSocket(Socket s){
+        socket=s;
+    }
+    public Socket getSocket(){
+        return socket;
+    }
+
+    public void setName(String n){
+        name=n;
+    }
+    public String getName(){
+        return name;
+    }
+
 }
