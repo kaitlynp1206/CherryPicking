@@ -49,11 +49,12 @@ public class Client {
                     while (reader.ready()) {
                         msg=reader.readLine();
                         if(msg.contains("/send username/")){
-                            System.out.println("enter a username: ");
+                            System.out.print("enter a username: ");
                             name=input.nextLine();
                             writer.println("/username check/"+name);
                         }else if(msg.contains("/legit name/")){
                             username=name;
+                            loggedIn=true;
                             System.out.println("you are now logged in. username: " + name);
                         }else if(msg.contains("/legit group name/")){
                             loggedIn=true;
@@ -66,12 +67,12 @@ public class Client {
         }
 
         public void run(){
+            System.out.print("/client/ ready for input.");
             while(loggedIn){
                 try {
                     if (reader.ready()) {
                         msg=reader.readLine();
                         System.out.println(msg);
-
                     }
                 }catch(IOException e){
                     System.out.println(e);

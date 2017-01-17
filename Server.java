@@ -15,8 +15,7 @@ public class Server{
 
     private static ArrayList<Socket> socketList;//stores clients, possibly replace with User obj
     private static ArrayList<Card> deck;
-    private static ArrayList<String> gameNameList;//stores names of all games
-    private static Queue<String> messageQueue;
+    private static ArrayList<Game> gameList;//stores names of all games
     private static ArrayList<User> userList;
 
     public static void main (String args[]) throws Exception{
@@ -25,9 +24,8 @@ public class Server{
 
     public void go() throws Exception{
         try {
-            gameNameList=new ArrayList<String>();
+            gameList=new ArrayList<Game>();
             userList = new ArrayList<User>();
-            messageQueue = new Queue<String>();
             serverSocket = new ServerSocket(4444);
             int threadID = 0;
 
@@ -51,6 +49,7 @@ public class Server{
         String text;
         boolean isNoun=false;
         ArrayList<Card>d=new ArrayList<Card>();
+        int cardID=-1;
 
         while(fileReader.hasNext()){
             text=fileReader.nextLine();
@@ -60,7 +59,7 @@ public class Server{
             }else if(text.equals("/noun")){
                 isNoun=true;
             }else if(!text.equals("")){
-                d.add(new Card(text,null,isNoun));
+                d.add(new Card(text,null,isNoun, cardID++));
             }
         }
 
@@ -98,26 +97,33 @@ public class Server{
         output.println(msg);
     }
 
-    class GameThread extends Thread{
-        private String gameName;
-        private boolean running=true;
-        private ArrayList<User> players=new ArrayList<User>();
-        private int numPlayers;
+    class MessageThread extends Thread{//make multiple message threads
+        Queue<String> messageQueue;
+        String msg;
+        Game game;
 
-        GameThread(String n, ArrayList<User> users){
-            gameName=n;
-            running=true;
-            numPlayers=0;
+        MessageThread(String s){
+            game=new Game(s);
+            messageQueue=new Queue<String>();
+
         }
-
         public void run(){
-            while(running){
+            try{
+                while(!messageQueue.isEmpty()){
+                    msg=messageQueue.dequeue();
 
+                    if(msg.contains("/chat/")) {
+                        for (User u : game.getPlayers()) {
+                            writeMessage(u.getSocket(), msg);
+                        }
+                    }
+
+                }
+            }catch(IOException e){
+                System.out.println(e);
             }
+
         }
-
-
-
 
     }
 
@@ -146,7 +152,6 @@ public class Server{
         }
 
         public void run(){
-
             //processes username
             writer.println("/send username/");
             while(!loggedIn){
@@ -166,26 +171,25 @@ public class Server{
                                 player=new User(clientSocket, name);
                                 userList.add(player);
                                 writer.println("/legit name/");
+                                loggedIn=true;
                             } else {
                                 writer.println("/illegitimate name");
                             }
                             name = ""; //reset values for next connection
                             legitName = true;
-                        }else if(msg.contains("/new game/") && legitName){//format: "/new game/game name"
+                        }else if(msg.contains("/new game/") || msg.contains("/join game/") && legitName){//format: "/new game/game name"
                             name=msg.substring(10);
-                            for(String s: gameNameList){
-                                if(name.equalsIgnoreCase(s)){
+                            for(Game g: gameList){
+                                if(g.getName().equals(name)){
                                     legitName=false;
                                 }
                             }
                             if(legitName){
-                                gameNameList.add(name);
                                 player.setGroupName(name);
                                 writer.println("/legit group name");
                             } else {
                                 writer.println("/illegitimate group name");
                             }
-
                         }
 
                     }
@@ -194,14 +198,15 @@ public class Server{
                 }
             }
 
+            System.out.println("/server/ client successfully logged in");
             try {
-                while ((msg = reader.readLine()) != null) {
+                while ((msg=reader.readLine())!=null) {
+                    System.out.println(msg);
                      if(msg.contains("/chat/")){//if user enters text into chat window
                          msg=msg.substring(6);
-                        for (User u : userList) {
-                            writeMessage(u.getSocket(), msg);
-                            System.out.println("/server/ message sent");
-                        }
+                         for(User u: userList) {
+                             writeMessage(u.getSocket(), u.getName()+msg);
+                         }
                     }
                 }
             } catch (IOException e) {
