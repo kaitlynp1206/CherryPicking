@@ -8,6 +8,19 @@ public class User {
     private String username;
     private String groupName;
     private int awesomePoints = 0;
+    boolean czar = false;
+	
+	public void setCzar(){
+		czar=true;
+	}
+	
+	public boolean isCzar(){
+		return czar;
+	}
+	
+    public void endCzarTurn(){
+        czar=false;
+    }
     
     User(Socket socket, String username){
         this.socket=socket;
