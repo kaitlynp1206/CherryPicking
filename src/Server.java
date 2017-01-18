@@ -10,7 +10,7 @@ import java.util.Scanner;
 
 public class Server{
     private static ServerSocket serverSocket;
-    private static Socket clientSocket;
+    private Socket clientSocket;
     private static String input;
 
     private static ArrayList<Socket> socketList;//stores clients, possibly replace with User obj
@@ -22,7 +22,7 @@ public class Server{
         new Server().go();
     }
 
-    public void go() throws Exception{
+    public void go(){
         try {
             gameList=new ArrayList<MessageThread>();
             userList = new ArrayList<User>();
@@ -31,7 +31,6 @@ public class Server{
 
             while (true) {
                 clientSocket = serverSocket.accept();
-
                 System.out.println("/server/ client connected");
 
                 ClientThread t = new ClientThread(clientSocket, threadID++);
@@ -67,55 +66,27 @@ public class Server{
 
     }//end getDeck
 
-    //picks random cards from the deck to form a hand
-    public ArrayList<Card> getHand (ArrayList<Card> d, String user){
-        int handSize=7;
-        int deckSize=d.size();
-        int randomNumber;
-        Card card;
-        ArrayList<Card> hand=new ArrayList<Card>();
 
-        //loop as many cards as needed
-        for(int i=0;i<handSize;i++){
-            randomNumber=(int)(Math.random()*deckSize);
-            card=deck.get(randomNumber);//draw card from deck
 
-            while(!card.getUser().equals(null)){//check if card is already in another user's hand
-                randomNumber=(int)(Math.random()*deckSize);//if so, redraw card from deck
-                card=deck.get(randomNumber);
-            }
-
-            card.setUser(user);//once card is legit, change user ID to current user
-            hand.add(card);//add card to user's hand
-        }
-
-        return hand;
-    }//end getHand
-
-    public static void writeMessage(Socket s, String msg) throws IOException{
-        PrintWriter output=new PrintWriter(s.getOutputStream(), true);
-        output.println(msg);
-    }
-
-    class ClientThread extends Thread implements Serializable{
+    class ClientThread extends Thread{
         User player;
         Socket clientSocket;
         int clientID=-1;
         boolean running=true;
         boolean loggedIn=false;
         boolean legitName=true;
-        ObjectInputStream reader=null;
-        ObjectOutputStream writer=null;
+        BufferedReader reader=null;
+        PrintWriter writer=null;
         String name;
-        ChatObject msg;
+        String msg;
 
         //constructor
         ClientThread(Socket s, int i){
             try {
                 clientSocket = s;
                 clientID = i;
-                reader = new ObjectInputStream(clientSocket.getInputStream());
-                writer = new ObjectOutputStream(clientSocket.getOutputStream());
+                reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+                writer = new  PrintWriter(new OutputStreamWriter(clientSocket.getOutputStream()), true);
             }catch(IOException e){
                 e.printStackTrace();
             }
@@ -124,12 +95,13 @@ public class Server{
         public void run(){
             //processes username
             try{
-            writer.writeObject(new ChatObject("server", "player connected"));
+            writer.println("/send username/");//format: "/s/sender/m/message"
+            System.out.println("message sent");
             while(!loggedIn){
-                if((msg = (ChatObject) reader.readObject())!=null){
+                if((msg = reader.readLine())!=null){
                     //check username against list of connected users
-                    if(msg.getMessage().contains("/username check/")) {
-                        name = msg.getMessage().substring(16);//format: "/username check/username"
+                    if(msg.contains("/username check/")) {
+                        name = msg.substring(16);//format: "/username check/username"
                         for (User u : userList) {
                             if (name.equalsIgnoreCase(u.getName())) {
                                 legitName = false;
@@ -138,24 +110,30 @@ public class Server{
                         if (legitName) {//if name is not already taken, add user to list
                             player=new User(clientSocket, name);
                             userList.add(player);
-                            writer.writeObject(new ChatObject(player.getName(), "/legit name/"));
+                            writer.println("/legit name/");
                         } else {
-                            writer.writeObject(new ChatObject(player.getName(), "/illegitimate name/"));
+                            writer.println("/illegitimate name/");
                         }
                         name = ""; //reset values for next connection
                         legitName = true;
-                    }else if(msg.getMessage().contains("/new game/") || msg.getMessage().contains("/join game/")){//format: "/new game/game name"
-                        name=msg.getMessage().substring(10);
+                    }else if(msg.contains("/new game/") || msg.contains("/join game/")){//format: "/new game/game name"
+                        if(msg.contains("/new game/")){
+                            name=msg.substring(10);
+                        }else{
+                            name=msg.substring(11);
+                        }
                         for(MessageThread m: gameList){
                             if(m.getName().equals(name)){
                                 legitName=false;
                             }
                         }
-                        if(msg.getMessage().contains("/new game/") && legitName){ //if user starts a new game
-                            gameList.add(new MessageThread(name));
+                        if(msg.contains("/new game/") && legitName){ //if user starts a new game
                             player.setGroupName(name);
-                            writer.writeObject(new ChatObject(player.getName(),"/legit group name/")); //if user joins an existing game
-                        }else if (msg.getMessage().contains("/join game") && !legitName){
+                            MessageThread m=new MessageThread(name);
+                            gameList.add(m);
+                            m.getGame().addPlayer(player);
+                            writer.println("/legit group name/");
+                        }else if (msg.contains("/join game") && !legitName){//if user joins an existing game
                             player.setGroupName(name);
                             for(MessageThread m: gameList){
                                 if(m.getGame().getName().equals(name)){
@@ -172,11 +150,16 @@ public class Server{
             }
 
             try {
-                while ((msg=(ChatObject)reader.readObject())!=null){
+                while ((msg=reader.readLine())!=null){
                     System.out.println(msg);
+                    for(User u: userList){
+                        u.getWriter().println(msg);
+                    }
                     for(MessageThread m: gameList){
                         if(player.getGroupName().equals(m.getGame().getName())){
                             m.getQueue().enqueue(msg); //add message to appropriate queue/game
+                            writer.println("you are now connected to game "+msg);
+                            writer.println("/waiting for start/");
                         }
                     }
                 }
