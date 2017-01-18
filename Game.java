@@ -5,10 +5,9 @@
 import java.util.ArrayList;
 public class Game {
     private String name;
-    private int numPlayers;
+    private static int numPlayers;
     private ArrayList<User> players;
-    private Queue<String> messages;
-    private String state;
+    private int state;
     //states
     // 0 = waiting to start game
     // 1 = waiting for czar to pick card
@@ -19,11 +18,11 @@ public class Game {
     Game(String n){
         name=n;
         numPlayers=0;
-        state="waiting for players";
+        state=0;
     }
 
-    public void addPlayer(){
-
+    public void addPlayer(User u){
+        players.add(u);
     }
 
     public void setName(String n){
@@ -40,4 +39,10 @@ public class Game {
         return players;
     }
 
+    public void setState(int i){
+        state=i;
+    }
+    public int getState(){
+        return state;
+    }
 }
