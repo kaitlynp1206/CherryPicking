@@ -63,7 +63,7 @@ public class UsernameLogin {
 		titleLabel.setFont(new Font("Lithos Pro Regular", Font.ITALIC, 31));
 		usernameFrame.getContentPane().add(titleLabel);
 		
-		usernameLabel = new JTextField("GAME NAME");
+		usernameLabel = new JTextField("USERNAME");
 		usernameLabel.setBounds(69, 217, 245, 28);
 		usernameLabel.addMouseListener(new MouseAdapter(){
 			@Override

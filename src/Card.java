@@ -6,7 +6,7 @@ public class Card {
     private String user;
     private boolean isNoun;
 
-    Card (String text, String user, boolean isNoun){
+    Card (String text, String user, boolean isNoun, int cardID){
         this.text=text;
         this.user=user;
         this.isNoun=isNoun;

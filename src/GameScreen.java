@@ -1,8 +1,11 @@
 import javax.swing.JFrame;
 import java.awt.Font;
+import java.awt.Image;
+
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.DefaultListModel;
+import javax.swing.ImageIcon;
 import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JTextArea;
@@ -22,14 +25,14 @@ public class GameScreen {
 
 	private Font displayFont = new Font("Bodoni MT", Font.ITALIC, 20);
 	private Font cardFont = new Font("Book Antiqua", Font.PLAIN, 11);
-	private Font groupNameFont = new Font("Bodoni Bd BT", Font.BOLD, 25);
-	private Font countdownFont = new Font("Bodoni MT", Font.PLAIN, 35);
+	private Font groupNameFont = new Font("Bodoni MT", Font.BOLD, 25);
 	public static JFrame frmCherryPicking;
+	public static JFrame helpFrame;
 	static DefaultListModel<String> defaultList = new DefaultListModel<>();
-	private static User currentUser;
 	private static boolean active = true;
-	private String msg;
+	static String msg;
 	private static int cardSelected=-1;
+	static boolean gameActivated = false;
 
 	private static WindowListener windowListener = new WindowAdapter() {
 		@Override
@@ -55,15 +58,6 @@ public class GameScreen {
 		frmCherryPicking.setVisible(true);
 	}
 
-
-	/**
-	 * getCurrentUser
-	 * @return User - current user on the client 
-	 */
-	public static User getCurrentUser(){
-		return currentUser;
-	}
-
 	/**
 	 * updateScoresList
 	 */
@@ -86,10 +80,6 @@ public class GameScreen {
 		frmCherryPicking.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frmCherryPicking.getContentPane().setLayout(null);
 
-
-		//initialize the current user
-		currentUser = new User();
-
 		//initialize display panel - contains scores and chat room
 		JPanel displayPanel = new JPanel();
 		displayPanel.setBackground(Color.BLACK);
@@ -102,8 +92,8 @@ public class GameScreen {
 		groupLabel.setForeground(Color.WHITE);
 		groupLabel.setFont(displayFont);
 
-		JLabel groupNameLabel = new JLabel("New label");
-		groupNameLabel.setBounds(10, 37, 116, 30);
+		JLabel groupNameLabel = new JLabel(Client.groupName);
+		groupNameLabel.setBounds(10, 37, 160, 30);
 		groupNameLabel.setForeground(Color.RED);
 		groupNameLabel.setFont(groupNameFont);
 
@@ -162,8 +152,9 @@ public class GameScreen {
 		sendButton.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent e){
 				msg = chatMessage.getText().trim();
-				if (msg!=null && msg!=""){
+				if (msg!=""){
 					chatDisplay.append(Client.username + ": " + msg + "\n");
+					System.out.println(msg);
 					chatMessage.setText("");
 				}
 			}
@@ -184,6 +175,7 @@ public class GameScreen {
 			handCards[i].setEditable(false);
 			handCards[i].setLineWrap(true);
 			handCards[i].setWrapStyleWord(true);
+			handCards[i].setFont(cardFont);
 			cardsPanel.add(handCards[i]);
 
 		}
@@ -217,14 +209,24 @@ public class GameScreen {
 						cardSelected=-1;
 					}
 				}
-				
+
 				if (cardSelected!=-1){
-					
+
 				}
 			}
 		});
 		selectPanel.setLayout(null);
 		selectPanel.add(selectCardButton);
+
+		JButton helpButton = new JButton("?");
+		helpButton.setBounds(560, 10, 37, 23);
+		selectPanel.add(helpButton);
+		helpButton.addActionListener(new ActionListener(){
+			public void actionPerformed(ActionEvent e){
+				HelpScreen helpScreen = new HelpScreen();
+		        helpScreen.startHelpScreen();
+			}
+		});
 
 		JPanel personalPanel = new JPanel();
 		personalPanel.setBackground(Color.LIGHT_GRAY);
@@ -241,18 +243,21 @@ public class GameScreen {
 		});
 		personalPanel.add(exitButton);
 
-		JLabel usernameLabel = new JLabel("Username");
+		JLabel usernameLabel = new JLabel(Client.username);
 		usernameLabel.setForeground(Color.BLACK);
 		usernameLabel.setFont(new Font("Bodoni MT", Font.ITALIC, 26));
 		usernameLabel.setBounds(10, 11, 185, 20);
 		personalPanel.add(usernameLabel);
 
-		if (GroupLogin.gameMaker=true){
+		if (GroupLogin.gameMaker==true){
 			JButton startGameButton = new JButton("Start Game");
 			startGameButton.setBounds(375, 11, 106, 23);
 			startGameButton.addActionListener(new ActionListener(){
 				public void actionPerformed(ActionEvent e){
-					//check number of players
+					if (Game.numPlayers>3){
+						System.out.println("Starting Game");
+						gameActivated = true;
+					}
 				}
 			});
 			personalPanel.add(startGameButton);
@@ -278,49 +283,19 @@ public class GameScreen {
 		gamePanel.add(resultsPanel);
 		resultsPanel.setLayout(null);
 
-		JTextArea card5 = new JTextArea();
-		card5.setBackground(Color.LIGHT_GRAY);
-		card5.setBounds(10, 126, 93, 97);
-		resultsPanel.add(card5);
-
-		JTextArea card1 = new JTextArea();
-		card1.setBackground(Color.LIGHT_GRAY);
-		card1.setBounds(10, 11, 93, 97);
-		resultsPanel.add(card1);
-
-		JTextArea card6 = new JTextArea();
-		card6.setBackground(Color.LIGHT_GRAY);
-		card6.setBounds(117, 126, 93, 97);
-		resultsPanel.add(card6);
-
-		JTextArea card2 = new JTextArea();
-		card2.setBackground(Color.LIGHT_GRAY);
-		card2.setBounds(117, 11, 93, 97);
-		resultsPanel.add(card2);
-
-		JTextArea card7 = new JTextArea();
-		card7.setBackground(Color.LIGHT_GRAY);
-		card7.setBounds(224, 126, 93, 97);
-		resultsPanel.add(card7);
-
-		JTextArea card3 = new JTextArea();
-		card3.setBackground(Color.LIGHT_GRAY);
-		card3.setBounds(224, 11, 93, 97);
-		resultsPanel.add(card3);
-
-		JTextArea card8 = new JTextArea();
-		card8.setBackground(Color.LIGHT_GRAY);
-		card8.setBounds(331, 126, 93, 97);
-		resultsPanel.add(card8);
-
-		JTextArea card4 = new JTextArea();
-		card4.setBackground(Color.LIGHT_GRAY);
-		card4.setBounds(331, 11, 93, 97);
-		resultsPanel.add(card4);
+		JTextArea displayCards[][] = new JTextArea[2][4];
+		for (int i=0; i<2; i++){
+			for (int j=0; j<4; j++){
+				displayCards[i][j] = new JTextArea();
+				displayCards[i][j].setBackground(Color.LIGHT_GRAY);
+				displayCards[i][j].setBounds(10+j*107, 11+i*115, 93, 97);
+				resultsPanel.add(displayCards[i][j]);
+			}
+		}
 
 		JLabel countdownLabel = new JLabel("Countdown:");
 		countdownLabel.setForeground(Color.WHITE);
-		countdownLabel.setFont(new Font("Bodoni MT", Font.ITALIC, 20));
+		countdownLabel.setFont(new Font("Bodoni MT", Font.ITALIC, 22));
 		countdownLabel.setBounds(10, 169, 110, 20);
 		gamePanel.add(countdownLabel);
 
@@ -330,6 +305,7 @@ public class GameScreen {
 		timerLabel.setBounds(20, 200, 120, 33);
 		gamePanel.add(timerLabel);
 	}
+
 
 	public static void exit(){
 		frmCherryPicking.dispose();

@@ -4,6 +4,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.util.Scanner;
 
 /**
  * Created by Elizabeth Ip on 2017-01-08.
@@ -43,14 +44,14 @@ public class Client {
 
         try{
             socket=new Socket("localhost", 4444);
-            writer=new PrintWriter(new OutputStreamWriter(socket.getOutputStream()), true); //autoflush is my saviour
-            reader=new BufferedReader(new InputStreamReader(socket.getInputStream()));
             consoleReader=new BufferedReader(new InputStreamReader(System.in));
-            Thread t = new Thread( new ServerConnectionThread()); //make a new thread to check for messages from the server
+            reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+            writer = new PrintWriter(new OutputStreamWriter(socket.getOutputStream()), true);
+            ServerConnectionThread t=new ServerConnectionThread(); //make a new thread to check for messages from the server
             t.start(); //start the frickin thing
 
             while((text=consoleReader.readLine())!=null){ //constantly check for keyboard input
-                writer.println(text); //send it
+                writer.println("/chat/"+username+": "+text); //send it
             }
 
         }catch(IOException e){
@@ -75,19 +76,45 @@ public class Client {
         while (gameDisplay.getStatus()){
         }
     }
-
-
-
     class ServerConnectionThread extends Thread{
-        public void run(){
-            boolean running=true;
+        boolean loggedIn=false;
+        String msg;
+        String name;
+        Scanner input=new Scanner(System.in);
 
-            while(running){
+        //constructor
+        ServerConnectionThread(){
+            while(!loggedIn) {
+                try {
+                    while (reader.ready()) {
+                        msg=reader.readLine();
+                        if(msg.contains("/send username/")){
+                            System.out.print("enter a username: ");
+                            name=input.nextLine();
+                            writer.println("/username check/"+name);
+                        }else if(msg.contains("/legit name/")){
+                            username=name;
+                            loggedIn=true;
+                            System.out.println("you are now logged in. username: " + name);
+                        }else if(msg.contains("/legit group name/")){
+                            loggedIn=true;
+                        }
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+
+        public void run(){
+            System.out.print("/client/ ready for input.");
+            while(loggedIn){
                 try {
                     if (reader.ready()) {
-                        System.out.println(reader.readLine());
+                        msg=reader.readLine();
+                        System.out.println(msg);
                     }
-                }catch(Exception e){
+                }catch(IOException e){
                     System.out.println(e);
                 }
             }

@@ -23,7 +23,7 @@ public class GroupLogin {
 	private static String groupName;
 	private static boolean authenticated = false;
 	private static boolean active = true;
-	static boolean gameMaker = false;
+	static boolean gameMaker;
 	
 	private static WindowListener windowListener = new WindowAdapter() {
         @Override
@@ -75,7 +75,7 @@ public class GroupLogin {
 		imageCherry.setBounds(132, 30, 120, 120);
 		groupFrame.getContentPane().add(imageCherry);
 
-		groupNameLabel = new JTextField(" GAME NAME");
+		groupNameLabel = new JTextField("GROUP NAME");
 		groupNameLabel.setBounds(69, 217, 245, 28);
 		groupNameLabel.addMouseListener(new MouseAdapter(){
 			@Override
@@ -125,6 +125,7 @@ public class GroupLogin {
 				}
 				if (authenticated){
 					Client.authenticatedGroup = true;
+					gameMaker=false;
 					close();
 				} else {
 					errorLabel.setText("Error: Group name not found");
