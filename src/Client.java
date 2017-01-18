@@ -1,18 +1,18 @@
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.ObjectInputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.Scanner;
-
 /**
  * Created by Elizabeth Ip on 2017-01-08.
  */
 public class Client {
     private static Socket socket;
     private static PrintWriter writer;
-    private static BufferedReader reader;
+    private static ObjectInputStream reader;
     private static BufferedReader consoleReader;
     static String username;
     static String groupName;
@@ -20,32 +20,18 @@ public class Client {
     static boolean authenticatedGroup = false;
     static volatile boolean clientRunning;
     
-    
+
     public static void main (String args[]){
-        clientRunning = true;
-    	Client client = new Client();
-    	client.go();
+        new Client().go();
     }
 
-    public static boolean authenticateUsername(String username) throws Exception{
-    	return true;
-    }
-    
-    public static boolean authenticateGroupExists(String groupName) throws Exception{
-    	return true;
-    }
-    
-    public static boolean authenticateGroupName(String groupName) throws Exception{
-    	return true;
-    }
-    
     public void go(){
         String text="";
 
         try{
             socket=new Socket("localhost", 4444);
             consoleReader=new BufferedReader(new InputStreamReader(System.in));
-            reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+            reader = new ObjectInputStream(socket.getInputStream());
             writer = new PrintWriter(new OutputStreamWriter(socket.getOutputStream()), true);
             ServerConnectionThread t=new ServerConnectionThread(); //make a new thread to check for messages from the server
             t.start(); //start the frickin thing
@@ -76,9 +62,10 @@ public class Client {
         while (gameDisplay.getStatus()){
         }
     }
+
     class ServerConnectionThread extends Thread{
         boolean loggedIn=false;
-        String msg;
+        ChatObject msg;
         String name;
         Scanner input=new Scanner(System.in);
 
@@ -86,35 +73,41 @@ public class Client {
         ServerConnectionThread(){
             while(!loggedIn) {
                 try {
-                    while (reader.ready()) {
-                        msg=reader.readLine();
-                        if(msg.contains("/send username/")){
+                    while ((msg=(ChatObject)reader.readObject())!=null) {
+                        if(msg.getMessage().contains("/send username/")){
                             System.out.print("enter a username: ");
                             name=input.nextLine();
                             writer.println("/username check/"+name);
-                        }else if(msg.contains("/legit name/")){
+                        }else if(msg.getMessage().contains("/legit name/")){//prompt for game name after username passes
                             username=name;
-                            loggedIn=true;
                             System.out.println("you are now logged in. username: " + name);
-                        }else if(msg.contains("/legit group name/")){
-                            loggedIn=true;
+                            System.out.print("enter n to start a new game, or j to join an existing one");
+                            name=input.nextLine();
+                            if(name.equalsIgnoreCase("n")){
+                                name.equals("/new game/");
+                            }else if(name.equalsIgnoreCase("j")){
+                                name.equals("/join game");
+                            }
+                            System.out.print("enter a group name: ");
+                            name=name+input.nextLine();
+                            writer.println(name);
+                        }else if(msg.getMessage().contains("/legit group name/")){
+                            loggedIn=true;//finally allow user to start a game
                         }
                     }
-                } catch (IOException e) {
+                } catch (Exception e) {
                     e.printStackTrace();
                 }
             }
         }
 
         public void run(){
-            System.out.print("/client/ ready for input.");
             while(loggedIn){
                 try {
-                    if (reader.ready()) {
-                        msg=reader.readLine();
-                        System.out.println(msg);
+                    if ((msg=(ChatObject)reader.readObject())!=null) {
+                        System.out.println(msg.getMessage());//print the message from server
                     }
-                }catch(IOException e){
+                }catch(Exception e){
                     System.out.println(e);
                 }
             }

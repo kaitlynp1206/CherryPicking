@@ -1,16 +1,13 @@
 /**
  * Created by Elizabeth Ip on 2017-01-16.
  */
-import java.util.ArrayList;
-import java.util.Queue;
 
+import java.util.ArrayList;
 public class Game {
-	
     private String name;
-    protected static int numPlayers;
+    private static int numPlayers;
     private ArrayList<User> players;
-    private Queue<String> messages;
-    private String state;
+    private int state;
     //states
     // 0 = waiting to start game
     // 1 = waiting for czar to pick card
@@ -21,31 +18,31 @@ public class Game {
     Game(String n){
         name=n;
         numPlayers=0;
-        state="waiting for players";
+        state=0;
     }
 
-    public void addPlayer(){
-    	numPlayers++;
+    public void addPlayer(User u){
+        players.add(u);
     }
 
     public void setName(String n){
         name=n;
     }
-    
     public String getName(){
         return name;
-    }
-    
-    public void removePlayer(){
-    	
     }
 
     public void setPlayers(ArrayList<User> p){
         players=p;
     }
-    
     public ArrayList<User> getPlayers(){
         return players;
     }
-    
+
+    public void setState(int i){
+        state=i;
+    }
+    public int getState(){
+        return state;
+    }
 }

@@ -1,20 +1,34 @@
 /**
  * Created by Elizabeth Ip on 2017-01-16.
  */
+import java.io.*;
+
 public class MessageThread extends Thread{
     private Game game;
-    Queue <String> queue;
+    private static Queue <ChatObject> queue;
 
     MessageThread(String s){
         game=new Game(s);
-        queue=new Queue();
+        queue=new Queue<ChatObject>();
     }
 
     public void run(){
-        String msg;
+        ChatObject msg;
         //checks message queue
         while(!queue.isEmpty()){
-            msg=queue.dequeue();
+            try {
+                msg = queue.dequeue();
+                if (msg.getMessage().contains("/chat/")) {
+                    for (User u : game.getPlayers()) {
+                        u.getWriter().writeObject(msg);
+                    }
+                }
+                if (msg.getMessage().contains("/ready/")) {
+
+                }
+            }catch(Exception e){
+                System.out.println(e);
+            }
 
         }
     }
@@ -24,5 +38,11 @@ public class MessageThread extends Thread{
     }
     public void setGame(Game g){
         game=g;
+    }
+    public void setQueue(Queue<ChatObject> q){
+        queue=q;
+    }
+    public Queue<ChatObject> getQueue(){
+        return queue;
     }
 }

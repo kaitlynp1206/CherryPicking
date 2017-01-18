@@ -2,60 +2,85 @@
  * Created by Elizabeth Ip on 2017-01-11.
  */
 import java.net.Socket;
+import java.io.*;
 
 public class User {
     private Socket socket;
-    private String username;
+    private String name;
     private String groupName;
-    private int awesomePoints = 0;
-    boolean czar = false;
-	
-	public void setCzar(){
-		czar=true;
-	}
-	
-	public boolean isCzar(){
-		return czar;
-	}
-	
-    public void endCzarTurn(){
-        czar=false;
-    }
-    
-    User(Socket socket, String username){
-        this.socket=socket;
-        this.username=username;
+    private int awesomePoints;
+    private boolean czar;
+    private boolean ready;
+    private ObjectInputStream reader;
+    private ObjectOutputStream writer;
+    private Queue<ChatObject> queue;
+
+    User(Socket s, String n){
+        socket=s;
+        name=n;
+        awesomePoints=0;
     }
 
-    public void setSocket(Socket socket){
-        this.socket=socket;
+    public void setQueue(Queue<ChatObject> q){
+        queue=q;
     }
-    
+    public Queue<ChatObject> getQueue(){
+        return queue;
+    }
+
+    public void setWriter(ObjectOutputStream w){
+        writer=w;
+    }
+    public ObjectOutputStream getWriter(){
+        return writer;
+    }
+
+    public void setCzar(boolean c){
+        czar=c;
+    }
+    public boolean getCzar(){
+        return czar;
+    }
+
+    public void setReady(boolean r){
+        ready=r;
+    }
+    public boolean getReady(){
+        return ready;
+    }
+
+    public void setGroupName(String g){
+        groupName=g;
+    }
+    public String getGroupName(){
+        return groupName;
+    }
+
+    public void setSocket(Socket s){
+        socket=s;
+    }
     public Socket getSocket(){
         return socket;
     }
 
-    public void setUsername(String username){
-        this.username=username;
+    public void setName(String n){
+        name=n;
     }
-    
-    public String getUsername(){
-        return username;
+    public String getName(){
+        return name;
     }
-    
-    public void setGroupName(String groupName){
-        this.groupName=groupName;
+
+    public void setPoints(int p){
+        awesomePoints=p;
     }
-    
-    public String getGroupName(){
-        return groupName;
+    public int getPoints(){
+        return awesomePoints;
     }
-    
-    public void addPoints(){
-        awesomePoints++;
+
+    public void setReader(ObjectInputStream r){
+        reader=r;
     }
-    
-    public String getScoreDisplay(){
-        return (username + ": " + awesomePoints);
+    public ObjectInputStream getReader(){
+        return reader;
     }
 }
