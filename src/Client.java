@@ -1,7 +1,11 @@
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.Scanner;
-import java.awt.event.*;
+
 /**
  * Created by Elizabeth Ip on 2017-01-08.
  */
@@ -11,6 +15,17 @@ public class Client {
     private static BufferedReader reader;
     private static BufferedReader consoleReader;
     private static User player;
+    
+    private static String msg;
+    static String tempMessage;
+    static boolean start=false;
+    static String username;
+	static String groupName;
+	static boolean authenticatedName = false;
+	static boolean authenticatedGroup = false;
+	static int gameSelection=0;
+
+
 
     public static void main (String args[]){
         new Client().go();
@@ -35,44 +50,62 @@ public class Client {
         }catch(IOException e){
             e.printStackTrace();
         }
+      //Username Screen
+		UsernameLogin userLogin = new UsernameLogin();
+		userLogin.startUserScreen();
+		while (userLogin.getStatus()){
+		}
+
+		//GroupName Screen
+		GroupLogin groupLogin = new GroupLogin();
+		groupLogin.startGroupScreen();
+		while (groupLogin.getStatus()){
+		}
+
+		//GameScreen
+		GameScreen gameDisplay = new GameScreen();
+		gameDisplay.startGameScreen();
+		while (gameDisplay.getStatus()){
+		}
     }
 
     class ServerConnectionThread extends Thread{
         boolean loggedIn=false;
-        String msg;
-        String name;
         Scanner input=new Scanner(System.in);
-
+        
         //constructor
         ServerConnectionThread(){
             while(!loggedIn) {
                 try {
                     while ((msg=reader.readLine())!=null){
-                        System.out.println(msg);
                         if(msg.contains("/send username/")){
-                            System.out.print("enter a username: ");
-                            name=input.nextLine();
-                            writer.println("/username check/"+name);
+                        	while(start==false){	
+                        	}
+                            writer.println("/username check/"+tempMessage);
                         }else if(msg.contains("/legit name/")){//prompt for game name after username passes
-                            player=new User(socket, name);
-                            System.out.println("you are now logged in. username: " + name);
-                            System.out.print("enter n to start a new game, or j to join an existing one");
-                            name=input.nextLine();
-                            if(name.equalsIgnoreCase("n")){
-                                name.equals("/new game/");
-                            }else if(name.equalsIgnoreCase("j")){
-                                name.equals("/join game");
+                        	authenticatedName=true;
+                        	start=false;
+                            player=new User(socket, username);
+                            System.out.println("you are now logged in. username: " + username);
+                            while(start==false){	
+                        	}
+                            if(gameSelection==1){
+                                tempMessage.equals("/new game/"+tempMessage);
+                            }else if(gameSelection==2){
+                                tempMessage.equals("/join game/"+tempMessage);
                             }
-                            System.out.print("enter a group name: ");
-                            name=name+input.nextLine();
-                            writer.println(name);
+                            writer.println(tempMessage);
                         }else if(msg.contains("/legit group name/")){
+                        	authenticatedGroup=true;
+                        	start=false;
                             loggedIn=true;//finally allow user to start a game
                         }
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
+              
+
             }
         }
 
@@ -88,12 +121,12 @@ public class Client {
                             msg=input.nextLine();
                             writer.println("/ready/");
                         }else if(msg.contains("/card/")){
-                            player.getHand().add(new Card(msg.substring(6)));
+                           // player.getHand().add(new Card(msg.substring(6)));
                         }
                         else if(msg.contains("/waiting for card/")){
-                            for(Card c: player.getHand()){
-                                System.out.println("card: "+c.getText());
-                            }
+                            //for(Card c: player.getHand()){
+                            //    System.out.println("card: "+c.getText());
+                            //}
                             System.out.println("select a card: ");
                             msg=input.nextLine();
                             writer.println("/ready/sender/"+player.getName()+"/card/"+msg);
@@ -105,5 +138,14 @@ public class Client {
                 }
             }
         }
+       
+    }
+
+    public static boolean getAuthenticateUsername(){
+    	return authenticatedName;
+    }
+    
+    public static boolean getAuthenticateGroupName(){
+    	return authenticatedGroup;
     }
 }
