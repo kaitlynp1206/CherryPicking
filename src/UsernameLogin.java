@@ -92,18 +92,20 @@ public class UsernameLogin {
 	
 		startButton.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent e){
-				username = usernameLabel.getText();
+				username = usernameLabel.getText().trim();
+				Client.tempMessage=username;
+				Client.start=true;
 				try {
-					if ((!authenticated) && (Client.authenticateUsername(username))) {
+					if ((!authenticated) && (Client.getAuthenticateUsername())) {
 						Client.username = username;
 						authenticated = true;
+						System.out.println("Success");
 					}
 				} catch (Exception error) {
 					error.printStackTrace();
 				}
 				if (authenticated) {
 					close();
-					Client.authenticatedName = true;
 				} else {
 					// Error label
 					errorLabel = new JLabel("Error: Username has already been taken");
@@ -123,7 +125,6 @@ public class UsernameLogin {
 	public static void exit(){
 		usernameFrame.dispose();
 		active=false;
-		Client.clientRunning=false;
 	}
 	
 	public void close() {
