@@ -93,9 +93,12 @@ public class GroupLogin {
 
 		newGameButton.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent e){
-				groupName = groupNameLabel.getText();
+				groupName = groupNameLabel.getText().trim();
+				Client.tempMessage=groupName;
+				Client.gameSelection=1;
+				Client.start=true;
 				try {
-					if ((!authenticated) && (Client.authenticateGroupName(groupName))){
+					if ((!authenticated) && (Client.getAuthenticateGroupName())){
 						Client.groupName = groupName;
 						authenticated=true;
 					}
@@ -103,7 +106,6 @@ public class GroupLogin {
 					error.printStackTrace();
 				}
 				if (authenticated){
-					Client.authenticatedGroup = true;
 					gameMaker=true;
 					close();
 				} else{
@@ -114,9 +116,12 @@ public class GroupLogin {
 
 		joinGameButton.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent e){
-				groupName = groupNameLabel.getText();
+				groupName = groupNameLabel.getText().trim();
+				Client.tempMessage=groupName;
+				Client.gameSelection=2;
+				Client.start=true;
 				try {
-					if ((!authenticated) && (Client.authenticateGroupExists(groupName))){
+					if ((!authenticated) && (Client.getAuthenticateGroupName())){
 						Client.groupName = groupName;
 						authenticated=true;
 					}
@@ -124,7 +129,6 @@ public class GroupLogin {
 					error.printStackTrace();
 				}
 				if (authenticated){
-					Client.authenticatedGroup = true;
 					gameMaker=false;
 					close();
 				} else {
@@ -137,7 +141,6 @@ public class GroupLogin {
 	public static void exit(){
 		groupFrame.dispose();
 		active=false;
-		Client.clientRunning=false;
 	}
 	
 	public void close() {
