@@ -16,13 +16,13 @@ public class Client {
 	private static BufferedReader consoleReader;
 
 	private static String msg = "";
-	static String tempMessage;
-	static boolean start=false;
-	static String username;
-	static String groupName;
-	static boolean authenticatedName = false;
-	static boolean authenticatedGroup = false;
-	static int gameSelection=0;
+	private String tempMessage;
+	private boolean start=false;
+	private String username;
+	private String groupName;
+	private boolean authenticatedName = false;
+	private boolean authenticatedGroup = false;
+	private int gameSelection=0;
 
 
 
@@ -135,15 +135,43 @@ public class Client {
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
-
-		}
-
-		public boolean getAuthenticateUsername(){
-			return authenticatedName;
-		}
-
-		public boolean getAuthenticateGroupName(){
-			return authenticatedGroup;
 		}
 	}
+	
+	public boolean getAuthenticateUsername(){
+		return authenticatedName;
+	}
+
+	public boolean getAuthenticateGroupName(){
+		return authenticatedGroup;
+	}
+	
+	public void setTempMessage(String tempMessage){
+		this.tempMessage=tempMessage;
+	}
+	
+	public void setUsername(String username){
+		this.username=username;
+	}
+	
+	public void setGroupName(String groupName){
+		this.groupName=groupName;
+	}
+	
+	public void startRun(){
+		start=true;
+	}
+	
+	public void setGameSelection(int gameSelection){
+		this.gameSelection=gameSelection;
+	}
+	
+	public String getUsername(){
+		return username;
+	}
+	
+	public String getGroupName(){
+		return groupName;
+	}
+	
 }
