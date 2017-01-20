@@ -10,16 +10,15 @@ import java.util.Scanner;
  * Created by Elizabeth Ip on 2017-01-08.
  */
 public class Client {
-    private static Socket socket;
-    private static PrintWriter writer;
-    private static BufferedReader reader;
-    private static BufferedReader consoleReader;
-    private static User player;
-    
-    private static String msg;
-    static String tempMessage;
-    static boolean start=false;
-    static String username;
+	private static Socket socket;
+	private static PrintWriter writer;
+	private static BufferedReader reader;
+	private static BufferedReader consoleReader;
+
+	private static String msg = "";
+	static String tempMessage;
+	static boolean start=false;
+	static String username;
 	static String groupName;
 	static boolean authenticatedName = false;
 	static boolean authenticatedGroup = false;
@@ -27,125 +26,124 @@ public class Client {
 
 
 
-    public static void main (String args[]){
-        new Client().go();
-    }
+	public static void main (String args[]){
+		new Client().go();
+	}
 
-    public void go(){
-        String text="";
+	public void go(){
+		String msg="";
 
-        try{
-            socket=new Socket("localhost", 4444);
-            consoleReader=new BufferedReader(new InputStreamReader(System.in));
-            reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-            writer = new PrintWriter(new OutputStreamWriter(socket.getOutputStream()), true);
+		try {
+			socket = new Socket("localhost", 6666);//start up a socket
+			reader = new BufferedReader(new InputStreamReader(socket.getInputStream())); //make reader and writer
+			writer = new PrintWriter(new OutputStreamWriter(socket.getOutputStream()), true);//AUTOFLUSH IS MY SAVIOUR i hate flushing
 
-            ServerConnectionThread t=new ServerConnectionThread(); //make a new thread to check for messages from the server
-            t.start(); //start the frickin thing
+			ServerConnectionThread t=new ServerConnectionThread();//create a new thread to handle client/server messages
+			t.start();//start the stupid thing
 
-            while((text=consoleReader.readLine())!=null){ //constantly check for keyboard input
-                writer.println("/chat/"+player.getName()+": "+text); //send it
+			/* this fragment constantly checks for user input and sends it to the server but i don't want that rn
+            consoleReader = new BufferedReader(new InputStreamReader(System.in));
+            while((msg=consoleReader.readLine())!=null) {//write to socket
+                writer.println(msg);
             }
+			 */
 
-        }catch(IOException e){
-            e.printStackTrace();
-        }
-      //Username Screen
-		UsernameLogin userLogin = new UsernameLogin();
-		userLogin.startUserScreen();
-		while (userLogin.getStatus()){
+		}catch(Exception e){
+			e.printStackTrace();
+		}
+		/*Username Screen
+      		UsernameLogin userLogin = new UsernameLogin();
+      		userLogin.startUserScreen();
+      		while (userLogin.getStatus()){
+      		}
+
+      		//GroupName Screen
+      		GroupLogin groupLogin = new GroupLogin();
+      		groupLogin.startGroupScreen();
+      		while (groupLogin.getStatus()){
+      		}
+
+      		//GameScreen
+      		GameScreen gameDisplay = new GameScreen();
+      		gameDisplay.startGameScreen();
+      		while (gameDisplay.getStatus()){
+      		}
+		 */
+	}
+
+	class ServerConnectionThread extends Thread{
+		boolean loggedIn=false;
+		private boolean playing;
+
+		//constructor
+		ServerConnectionThread(){
+			while(!loggedIn) {
+				try {
+					while (reader.ready()){
+						msg=reader.readLine();
+						if(msg.contains("/send username/")){
+							while(start==false){	
+							}
+							writer.println("/username check/"+tempMessage);
+						}else if(msg.contains("/g2g/")){//prompt for game name after username passes
+							authenticatedName=true;
+							loggedIn=true;
+						}else if(msg.contains("/no go on the nameroo, jer/")){
+							while(start==false){	
+							}
+							writer.println("/username check/"+tempMessage);
+						}
+						start=false;
+					}
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
 		}
 
-		//GroupName Screen
-		GroupLogin groupLogin = new GroupLogin();
-		groupLogin.startGroupScreen();
-		while (groupLogin.getStatus()){
+		//runs the client side of every game
+		public void run(){
+
+			try {
+				while(!playing){//while the user is not in any game, prompt to join or create one
+					while(reader.ready()){
+						msg=reader.readLine();
+						System.out.println("/msg/"+msg);
+
+
+						if(msg.contains("/send game name/") || msg.contains("/game name invalid/")){//if prompted to send game name
+							if(msg.contains("/game name invalid/")){
+								System.out.println("that name is invalid. try again.");//tell the user what was wrong with their previous game name attempt
+							}
+
+							while(start==false){	
+							}
+							if(gameSelection==1){
+								writer.println("/new game/game name check/" + tempMessage);//send the proposed game name to the server
+
+							}else if(gameSelection==2){
+								writer.println("/join game/game name check/"+ tempMessage);
+							}
+
+						}else if(msg.contains("/game name okay/")){//if user is able to join game/create a new one
+							playing=true;//allow user to move on
+							authenticatedGroup=true;
+						}
+						start=false;
+					}
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+
 		}
 
-		//GameScreen
-		GameScreen gameDisplay = new GameScreen();
-		gameDisplay.startGameScreen();
-		while (gameDisplay.getStatus()){
+		public boolean getAuthenticateUsername(){
+			return authenticatedName;
 		}
-    }
 
-    class ServerConnectionThread extends Thread{
-        boolean loggedIn=false;
-        Scanner input=new Scanner(System.in);
-        
-        //constructor
-        ServerConnectionThread(){
-            while(!loggedIn) {
-                try {
-                    while ((msg=reader.readLine())!=null){
-                        if(msg.contains("/send username/")){
-                        	while(start==false){	
-                        	}
-                            writer.println("/username check/"+tempMessage);
-                        }else if(msg.contains("/legit name/")){//prompt for game name after username passes
-                        	authenticatedName=true;
-                        	start=false;
-                            player=new User(socket, username);
-                            System.out.println("you are now logged in. username: " + username);
-                            while(start==false){	
-                        	}
-                            if(gameSelection==1){
-                                tempMessage.equals("/new game/"+tempMessage);
-                            }else if(gameSelection==2){
-                                tempMessage.equals("/join game/"+tempMessage);
-                            }
-                            writer.println(tempMessage);
-                        }else if(msg.contains("/legit group name/")){
-                        	authenticatedGroup=true;
-                        	start=false;
-                            loggedIn=true;//finally allow user to start a game
-                        }
-                    }
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-              
-
-            }
-        }
-
-        public void run(){
-            while(loggedIn){
-                try {
-                    if(reader.ready()) {
-                        msg=reader.readLine();
-                        if(msg.contains("/chat/")){
-                            System.out.println(msg);//print the message from server
-                        }else if(msg.contains("/waiting for start/")){
-                            System.out.println("enter anything to begin game");
-                            msg=input.nextLine();
-                            writer.println("/ready/");
-                        }else if(msg.contains("/card/")){
-                           // player.getHand().add(new Card(msg.substring(6)));
-                        }
-                        else if(msg.contains("/waiting for card/")){
-                            //for(Card c: player.getHand()){
-                            //    System.out.println("card: "+c.getText());
-                            //}
-                            System.out.println("select a card: ");
-                            msg=input.nextLine();
-                            writer.println("/ready/sender/"+player.getName()+"/card/"+msg);
-                        }
-
-                    }
-                }catch(Exception e){
-                    e.printStackTrace();
-                }
-            }
-        }
-       
-    }
-
-    public static boolean getAuthenticateUsername(){
-    	return authenticatedName;
-    }
-    
-    public static boolean getAuthenticateGroupName(){
-    	return authenticatedGroup;
-    }
+		public boolean getAuthenticateGroupName(){
+			return authenticatedGroup;
+		}
+	}
 }
