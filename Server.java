@@ -1,201 +1,282 @@
-/**
- * Created by Elizabeth Ip on 2017-01-08.
- */
-
+import java.net.*;
 import java.io.*;
-import java.net.ServerSocket;
-import java.net.Socket;
-import java.util.ArrayList;
-import java.util.Scanner;
+import java.util.*;
 
-public class Server{
+class Server{
     private static ServerSocket serverSocket;
-    private static Socket clientSocket;
-    private static String input;
+    private static BufferedReader reader;
+    private static ArrayList<ClientThread> clients;
+    private static ArrayList<Game> games;
 
-    private static ArrayList<Socket> socketList;//stores clients, possibly replace with User obj
-    private static ArrayList<Card> deck;
-    private static ArrayList<MessageThread> gameList;//stores names of all games
-    private static ArrayList<User> userList;
 
-    public static void main (String args[]) throws Exception{
-        new Server().go();
+    public static void main(String args[]){
+        new Server().go();//idk why this works but rayan said mr mangat did it like this amd it works so we should do this
     }
 
-    public void go() throws Exception{
-        try {
-            gameList=new ArrayList<MessageThread>();
-            userList = new ArrayList<User>();
-            serverSocket = new ServerSocket(4444);
-            int threadID = 0;
+    /**
+     * go method
+     * runs everything
+     */
+    public void go(){
+        Socket clientSocket;
 
-            while (true) {
-                clientSocket = serverSocket.accept();
+        try{
+            games=new ArrayList<Game>();//create arraylist of game threads
 
-                System.out.println("/server/ client connected");
+            clients=new ArrayList<ClientThread>();
+            serverSocket=new ServerSocket(6666);
 
-                ClientThread t = new ClientThread(clientSocket, threadID++);
-                t.start();
+            while(true){
+                clientSocket=serverSocket.accept();//accept the connection
+
+                ClientThread t = new ClientThread(clientSocket); //start up a new thread for each client
+                clients.add(t);//add thread to array
+                t.start(); //start the frickin thing
+
             }
         }catch(Exception e){
             System.out.println(e);
         }
     }
 
-    //reads cards from file
-    public static ArrayList<Card> getDeck() throws Exception {
-        File cardsFile=new File("cards.txt");
-        Scanner fileReader=new Scanner(cardsFile);
-        String text;
-        boolean isNoun=false;
-        ArrayList<Card>d=new ArrayList<Card>();
-        int cardID=-1;
+    /**
+     * ClientThread
+     * contains writer/reader for each socket to keep socket writing and reading simple
+     * handles messages between server and individual client
+     */
+    class ClientThread extends Thread{
+        private Socket socket;
+        private PrintWriter writer;
+        private BufferedReader reader;
+        private String name;
+        private String gameName;
+        private int awesomePoints;
+        private boolean czar;
+        private boolean loggedIn;
+        private boolean playing;
 
-        while(fileReader.hasNext()){
-            text=fileReader.nextLine();
-
-            if(text.equals("/adjective")){
-                isNoun=false;
-            }else if(text.equals("/noun")){
-                isNoun=true;
-            }else if(!text.equals("")){
-                d.add(new Card(text,null,isNoun, cardID++));
-            }
+        public Socket getSocket(){
+            return socket;
+        }
+        public PrintWriter getWriter(){
+            return writer;
+        }
+        public BufferedReader getReader(){
+            return reader;
+        }
+        public String getUsername(){
+            return name;
+        }
+        public String getGameName(){
+            return gameName;
+        }
+        public int getPoints(){
+            return awesomePoints;
+        }
+        public boolean getCzar(){
+            return czar;
         }
 
-        return d;//return deck arraylist
+        /**
+         * ClientThread
+         * @param s //the socket
+         * basically takes care of everything the client sends to the server
+         */
+        ClientThread(Socket s){ //constructor, includes login
+            String msg=""; //temporary variables to store messages from client
+            int numHappenings=0;
 
-    }//end getDeck
+            //declare most variables just in case nullpointerexception appears
+            name="";
+            gameName="";
+            awesomePoints=0;
+            czar=false;
+            loggedIn=false;
+            playing=false;
 
-    //picks random cards from the deck to form a hand
-    public ArrayList<Card> getHand (ArrayList<Card> d, String user){
-        int handSize=7;
-        int deckSize=d.size();
-        int randomNumber;
-        Card card;
-        ArrayList<Card> hand=new ArrayList<Card>();
-
-        //loop as many cards as needed
-        for(int i=0;i<handSize;i++){
-            randomNumber=(int)(Math.random()*deckSize);
-            card=deck.get(randomNumber);//draw card from deck
-
-            while(!card.getUser().equals(null)){//check if card is already in another user's hand
-                randomNumber=(int)(Math.random()*deckSize);//if so, redraw card from deck
-                card=deck.get(randomNumber);
-            }
-
-            card.setUser(user);//once card is legit, change user ID to current user
-            hand.add(card);//add card to user's hand
-        }
-
-        return hand;
-    }//end getHand
-
-    public static void writeMessage(Socket s, String msg) throws IOException{
-        PrintWriter output=new PrintWriter(s.getOutputStream(), true);
-        output.println(msg);
-    }
-
-    class ClientThread extends Thread implements Serializable{
-        User player;
-        Socket clientSocket;
-        int clientID=-1;
-        boolean running=true;
-        boolean loggedIn=false;
-        boolean legitName=true;
-        ObjectInputStream reader=null;
-        ObjectOutputStream writer=null;
-        String name;
-        ChatObject msg;
-
-        //constructor
-        ClientThread(Socket s, int i){
+            //now try the rest
             try {
-                clientSocket = s;
-                clientID = i;
-                reader = new ObjectInputStream(clientSocket.getInputStream());
-                writer = new ObjectOutputStream(clientSocket.getOutputStream());
-            }catch(IOException e){
+                socket = s;
+                writer = new PrintWriter(new OutputStreamWriter(s.getOutputStream()), true);
+                reader=new BufferedReader(new InputStreamReader(s.getInputStream()));
+
+                writer.println("/send username/");
+
+                //getting username so can log in
+                while(!loggedIn) {
+                    while (reader.ready()) {
+                        msg = reader.readLine();
+                        if (msg.contains("/username check/")) {
+                            msg=msg.substring(16);
+                            for (ClientThread c : clients) {//run through each client thread in arraylist
+                                if (msg.equalsIgnoreCase(c.getUsername())){ //check if the user's proposed name matches any existing names, IGNORING CASE
+                                    numHappenings++; //if name has already been taken, add 1 to number of times name is in arraylist
+                                }
+                            }
+
+                            System.out.println("numHappenings uName: "+numHappenings);//debug
+
+                            if(numHappenings==0){ //if name is good, happenings should be 0
+                                name=msg;//set client's username
+                                writer.println("/g2g/");//tell client that user is good to go (g2g)
+                                loggedIn=true; //tell server user is logged in and good to go
+                            }else{
+                                writer.println("/no go on the nameroo, jer/");//tell client that user must try again
+                            }
+                            numHappenings=0;//reset the variable -- IMPORTANT
+                        }
+                    }
+                }
+
+            }catch(Exception e){
                 e.printStackTrace();
             }
         }
 
+        //main method basically
+        //runs games and game selection
         public void run(){
-            //processes username
-            try{
-            writer.writeObject(new ChatObject("server", "player connected"));
-            while(!loggedIn){
-                if((msg = (ChatObject) reader.readObject())!=null){
-                    //check username against list of connected users
-                    if(msg.getMessage().contains("/username check/")) {
-                        name = msg.getMessage().substring(16);//format: "/username check/username"
-                        for (User u : userList) {
-                            if (name.equalsIgnoreCase(u.getName())) {
-                                legitName = false;
-                            }
-                        }
-                        if (legitName) {//if name is not already taken, add user to list
-                            player=new User(clientSocket, name);
-                            userList.add(player);
-                            writer.writeObject(new ChatObject(player.getName(), "/legit name/"));
-                        } else {
-                            writer.writeObject(new ChatObject(player.getName(), "/illegitimate name/"));
-                        }
-                        name = ""; //reset values for next connection
-                        legitName = true;
-                    }else if(msg.getMessage().contains("/new game/") || msg.getMessage().contains("/join game/")){//format: "/new game/game name"
-                        name=msg.getMessage().substring(10);
-                        for(MessageThread m: gameList){
-                            if(m.getName().equals(name)){
-                                legitName=false;
-                            }
-                        }
-                        if(msg.getMessage().contains("/new game/") && legitName){ //if user starts a new game
-                            gameList.add(new MessageThread(name));
-                            player.setGroupName(name);
-                            writer.writeObject(new ChatObject(player.getName(),"/legit group name/")); //if user joins an existing game
-                        }else if (msg.getMessage().contains("/join game") && !legitName){
-                            player.setGroupName(name);
-                            for(MessageThread m: gameList){
-                                if(m.getGame().getName().equals(name)){
-                                    m.getGame().addPlayer(player);
+            String msg="";
+            int numHappenings=0;
+
+            //get user to select or make new game
+            try {
+
+                if(!playing){//tell client to send a game name
+                    writer.println("/send game name/"); //tell client to send a game name
+                }
+
+                while (!playing) {
+                    while(reader.ready()){
+                        msg=reader.readLine();
+
+                        System.out.println("/msg/"+msg);
+
+                        if(msg.contains("/game name check/")){ //format this line will be in: "/new game/game name check/gameName here" or "/join game/game name check/gameName here"
+                            System.out.println("game array size: "+games.size());
+                            for(Game g: games){//check it against all existing group names
+                                System.out.println("game name: "+g.getGameName());
+                                if(msg.substring(msg.indexOf("/game name check/")+17).equalsIgnoreCase(g.getGameName())){
+                                    numHappenings++;
                                 }
                             }
+
+                            System.out.println("numHappenings game: "+numHappenings);//debug
+
+                            if(numHappenings==0 && msg.contains("/new game/")){//if name is available and new game
+                                Game g=new Game(msg.substring(msg.indexOf("/game name check/")+17));//create a new game thread with name
+                                games.add(g);
+
+                                for(ClientThread c: clients){//loop through all clients
+                                    if(c.getUsername().equalsIgnoreCase(name)){//find the one belonging to the player, ie. this one
+                                        g.addPlayer(c);//add the player to the game's arraylist
+                                    }
+                                }
+
+                                writer.println("/game name okay/");//tell client that name is good
+                                playing=true; //give client go-ahead to play game
+                            }else if(numHappenings>0 && msg.contains("/join game/")){//if client wants to join game and game exists
+                                for(ClientThread c: clients) {//go through all clients and find this one
+                                    if(c.getUsername().equalsIgnoreCase(name)) {
+                                        for(Game g: games) {//go through all games and find the one they want to join
+                                            if (msg.substring(msg.indexOf("/game name check/")+17).equals(g.getGameName())) {
+                                                g.addPlayer(c);//add client to game
+                                                playing=true;
+                                            }
+                                        }
+                                    }
+                                }
+                            }else{//if game name is invalid
+                                writer.println("/game name invalid/");//tell the client that.
+                            }
+
+                            numHappenings=0; //reset variable -- IMPORTANT
                         }
                     }
-
                 }
+            }catch(Exception e){//mmm exceptions
+                e.printStackTrace();
             }
+
+            //handles all messages within the game
+            //receives messages from client, puts them in the proper game queue to be dealt with by the game thread
+            try{
+                while(reader.ready()){//while there are messages from the client
+                    msg=reader.readLine();//get the message
+                    for(Game g: games){//loop through all games to find the one that matches the client's
+                        if(gameName.equalsIgnoreCase(g.getGameName())){
+                            g.addMessage(msg);//add the message to the proper game's queue
+                        }
+                    }
+                }
+            }catch(Exception e){//woohoo i love catching exceptions
+                e.printStackTrace();
+            }
+        }
+    }
+
+    /**
+     * Game
+     * handles group messages
+     */
+    class Game extends Thread{
+        private int state;
+        //states:
+        //0 = waiting to begin round, if round is 0, hand size 6, if not 0, hand size 1
+        //1 = waiting for players to pick cards
+        //2 = waiting for czar to pick winner
+
+        private int numPlayers;
+        private String name;
+        private ArrayList<ClientThread> players;
+        private Queue<String> queue;
+
+        public int getNumPlayers(){
+            return numPlayers;
+        }
+        public String getGameName(){
+            return name;
+        }
+        public ArrayList<ClientThread> getPlayers(){
+            return players;
+        }
+        public Queue<String> getQueue(){
+            return queue;
+        }
+        public void addPlayer(ClientThread c){
+            players.add(c);
+        }
+        public void addMessage(String s){
+            queue.enqueue(s);
+        }
+
+        Game(String n){//constructor
+            state=0;
+            players=new ArrayList<ClientThread>();
+            name=n;
+            queue=new Queue<String>();
+
+        }
+
+        public void run(){
+            String text;
+
+            try{
+                while(!queue.isEmpty()){
+                    text=queue.dequeue();
+                    if(text.contains("/chat/")) { //send message to all players if player enters stuff into the game chat
+                        for (ClientThread c : players) {
+                            c.getWriter().println(text);
+                        }
+                    }else if(text.contains("/new player/")){
+
+                    }
+                }
             }catch(Exception e){
                 e.printStackTrace();
             }
 
-            try {
-                while ((msg=(ChatObject)reader.readObject())!=null){
-                    System.out.println(msg);
-                    for(MessageThread m: gameList){
-                        if(player.getGroupName().equals(m.getGame().getName())){
-                            m.getQueue().enqueue(msg); //add message to appropriate queue/game
-                        }
-                    }
-                }
-            } catch (Exception e) {// checks to see if a user has disconnected
-                int index=-1;
-
-                System.out.println("/error/ "+e);
-                for(User u: userList){//find user in list
-                    if(u.getSocket().equals(clientSocket)){
-                        index=userList.indexOf(u);
-                    }
-                }
-                userList.remove(index);
-                System.out.println("/server/ user removed from list");
-
-                for(User u: userList){
-                    System.out.println(u.getName());
-                }
-            }
         }
+
     }
 }
