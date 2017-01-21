@@ -18,6 +18,12 @@ public class Card {
         this.cardID=cardID;
     }
 
+    //COPY THIS CONSTRUCTOR
+    Card (String text, int cardID){
+        this.text=text;
+        this.cardID=cardID;
+    }
+
     public String getText(){
         return this.text;
     }

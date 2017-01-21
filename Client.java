@@ -11,6 +11,8 @@ public class Client {
     private static BufferedReader reader;
     private static BufferedReader consoleReader;
     private static String username; //just in case i need to reference it
+    private static boolean creator;//tells if person created game or joined it
+    private static ArrayList<Card>hand;
 
     public static void main (String args[]){
         new Client().go();
@@ -20,6 +22,10 @@ public class Client {
         String msg="";
 
         try {
+            //declare stuff so no null pointer exceptions
+            creator=false;
+            hand=new ArrayList<Card>();
+
             socket = new Socket("localhost", 6666);//start up a socket
             reader = new BufferedReader(new InputStreamReader(socket.getInputStream())); //make reader and writer
             writer = new PrintWriter(new OutputStreamWriter(socket.getOutputStream()), true);//AUTOFLUSH IS MY SAVIOUR i hate flushing
@@ -85,7 +91,8 @@ public class Client {
         }//end constructor
 
         //runs the client side of every game
-        public void run(){
+        public synchronized void run(){
+            boolean validCard;
 
             try {
                 while(!playing){//while the user is not in any game, prompt to join or create one
@@ -110,33 +117,68 @@ public class Client {
                                 System.out.print("enter a game name: ");
                                 text=input.nextLine();
                                 writer.println("/new game/game name check/" + text);//send the proposed game name to the server
+
                             }else{//if user joins a game, prompt for name and send with "/join game/"
                                 System.out.println("enter a game name: ");
                                 text=input.nextLine();
                                 writer.println("/join game/game name check/"+text);
                             }
                         }else if(msg.contains("/game name okay/")){//if user is able to join game/create a new one
+                            if(msg.contains("/new/")){
+                                creator=true;
+                                System.out.print("enter g to start: ");
+                                text=input.nextLine();
+                                writer.println("/start game/");//tells server to start the game, u can replace this with a start button and only have it show if the player created the game
+                            }
                             playing=true;//allow user to move on
                         }
                     }
                 }
 
-                /**COPY/PASTE EVERYTHING FROM HERE DOWN**/
-                writer.println("/start game/");//tells server to start the game, u can replace this with a start button and only have it show if the player created the game
-
+                /**COPY THE ENTIRE WHILE LOOP**/
                 while(playing) {//game loop basically
                     if (reader.ready()) {//if server sent a message
                         msg = reader.readLine();
+                        validCard=false;
 
-                        if(msg.contains("/your hand/")){//if receiving hand of cards, print them all out
-                            msg=msg.substring(msg.lastIndexOf("/")+1);
-                            for(int i=0;i<6;i++){
-                                System.out.println("CARD "+(i+1)+": "+msg.substring(0,msg.indexOf("+")));
-                                msg=msg.substring(msg.indexOf("+")+1);
+                        if(msg.contains("/your hand/")) {//if receiving hand of cards, print them all out
+                            msg = msg.substring(msg.lastIndexOf("/") + 1);//remove the "/your hand/" part of the message
+
+                            hand.clear();//empty the current hand, replace with new hand
+                            while (msg.length() > 1) {//display cards
+                                hand.add(new Card(msg.substring(0,msg.indexOf("(")), Integer.valueOf(msg.substring(msg.indexOf("(")+1, msg.indexOf(")")))));
+                                msg = msg.substring(msg.indexOf("+") + 1);//remove first card from string
                             }
-                        }else{
+                            for(Card c: hand){//display cards with card numbers
+                                System.out.println("CARD "+c.getID()+": "+c.getText());
+                            }
+
+                            writer.println("/ready/"+username);//tell server to go to next stage
+                            System.out.println("player is ready. message sent.");
+                        } else if(msg.contains("/pick card/")){
+                            System.out.println("select the number of the card you want: ");
+                            text=input.nextLine();//get player's card
+
+                            for(Card c: hand){//see if player's selected card matches any of the ones in their hand
+                                if(Integer.valueOf(text)==c.getID()){
+                                    validCard=true;
+                                }
+                            }
+                            while(!validCard){//error checking
+                                System.out.println("invalid number. try again: ");
+                                text=input.nextLine();//get player's card
+
+                                for(Card c: hand){//see if player's selected card matches any of the ones in their hand
+                                    if(Integer.valueOf(text)==c.getID()){
+                                        validCard=true;
+                                    }
+                                }
+                            }
+                            writer.println("/ready/card/"+text);//tell the server which card the player picked
+
+                        } else{
                             System.out.println(msg);
-                        } //gotta have a lot more if statements
+                        }
                     }
                 }
 
