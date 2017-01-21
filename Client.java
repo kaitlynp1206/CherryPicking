@@ -27,12 +27,14 @@ public class Client {
             ServerConnectionThread t=new ServerConnectionThread();//create a new thread to handle client/server messages
             t.start();//start the stupid thing
 
-            /* this fragment constantly checks for user input and sends it to the server but i don't want that rn
+            //this fragment constantly checks for user input and sends it to the server but i don't want that rn
             consoleReader = new BufferedReader(new InputStreamReader(System.in));
-            while((msg=consoleReader.readLine())!=null) {//write to socket
-                writer.println(msg);
+            while(reader.ready()) {//write to socket
+                msg=reader.readLine();
+                if(msg.contains("/chat/")) {
+                    writer.println(msg);
+                }
             }
-            */
 
         }catch(Exception e){
             e.printStackTrace();
@@ -118,6 +120,26 @@ public class Client {
                         }
                     }
                 }
+
+                /**COPY/PASTE EVERYTHING FROM HERE DOWN**/
+                writer.println("/start game/");//tells server to start the game, u can replace this with a start button and only have it show if the player created the game
+
+                while(playing) {//game loop basically
+                    if (reader.ready()) {//if server sent a message
+                        msg = reader.readLine();
+
+                        if(msg.contains("/your hand/")){//if receiving hand of cards, print them all out
+                            msg=msg.substring(msg.lastIndexOf("/")+1);
+                            for(int i=0;i<6;i++){
+                                System.out.println("CARD "+(i+1)+": "+msg.substring(0,msg.indexOf("+")));
+                                msg=msg.substring(msg.indexOf("+")+1);
+                            }
+                        }else{
+                            System.out.println(msg);
+                        } //gotta have a lot more if statements
+                    }
+                }
+
             } catch (Exception e) {
                 e.printStackTrace();
             }

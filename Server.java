@@ -54,6 +54,9 @@ class Server{
         private boolean czar;
         private boolean loggedIn;
         private boolean playing;
+        private boolean ready;//ready for next phase of game
+        private Card card;//selected card
+        private ArrayList<Card> hand;
 
         public Socket getSocket(){
             return socket;
@@ -76,13 +79,34 @@ class Server{
         public boolean getCzar(){
             return czar;
         }
+        public void setReady(boolean r){
+            ready=r;
+        }
+        public boolean getReady(){
+            return ready;
+        }
+        public void setCard(Card c){
+            card=c;
+        }
+        public Card getCard(){
+            return card;
+        }
+        public void setHand(ArrayList<Card> h){
+            hand=h;
+        }
+        public ArrayList<Card> getHand(){
+            return hand;
+        }
 
-        /**
-         * ClientThread
-         * @param s //the socket
-         * basically takes care of everything the client sends to the server
-         */
-        ClientThread(Socket s){ //constructor, includes login
+        //other methods that are not getters and setters
+        public void addCard(Card c){
+            hand.add(c);
+        }
+        public void removeCard(Card c){
+            hand.remove(c);
+        }
+
+        ClientThread(Socket s){
             String msg=""; //temporary variables to store messages from client
             int numHappenings=0;
 
@@ -93,6 +117,8 @@ class Server{
             czar=false;
             loggedIn=false;
             playing=false;
+            ready=false;
+            hand=new ArrayList<Card>();
 
             //now try the rest
             try {
@@ -147,13 +173,12 @@ class Server{
                 }
 
                 while (!playing) {
-                    while(reader.ready()){
+                    if(reader.ready()){
                         msg=reader.readLine();
 
                         System.out.println("/msg/"+msg);
 
                         if(msg.contains("/game name check/")){ //format this line will be in: "/new game/game name check/gameName here" or "/join game/game name check/gameName here"
-                            System.out.println("game array size: "+games.size());
                             for(Game g: games){//check it against all existing group names
                                 System.out.println("game name: "+g.getGameName());
                                 if(msg.substring(msg.indexOf("/game name check/")+17).equalsIgnoreCase(g.getGameName())){
@@ -161,26 +186,30 @@ class Server{
                                 }
                             }
 
-                            System.out.println("numHappenings game: "+numHappenings);//debug
-
                             if(numHappenings==0 && msg.contains("/new game/")){//if name is available and new game
-                                Game g=new Game(msg.substring(msg.indexOf("/game name check/")+17));//create a new game thread with name
+                                gameName=msg.substring(msg.indexOf("/game name check/")+17);
+                                Game g=new Game(gameName);//create a new game thread with name
                                 games.add(g);
+                                g.start();
 
                                 for(ClientThread c: clients){//loop through all clients
                                     if(c.getUsername().equalsIgnoreCase(name)){//find the one belonging to the player, ie. this one
+                                        writer.println("/game name okay/");//tell client that name is good
+
                                         g.addPlayer(c);//add the player to the game's arraylist
+                                        g.addMessage("/new player/"+c.getUsername());
                                     }
                                 }
-
-                                writer.println("/game name okay/");//tell client that name is good
                                 playing=true; //give client go-ahead to play game
+                                System.out.println("playing is true");
+
                             }else if(numHappenings>0 && msg.contains("/join game/")){//if client wants to join game and game exists
                                 for(ClientThread c: clients) {//go through all clients and find this one
                                     if(c.getUsername().equalsIgnoreCase(name)) {
                                         for(Game g: games) {//go through all games and find the one they want to join
                                             if (msg.substring(msg.indexOf("/game name check/")+17).equals(g.getGameName())) {
                                                 g.addPlayer(c);//add client to game
+                                                g.addMessage("/new player/"+c.getUsername());
                                                 playing=true;
                                             }
                                         }
@@ -194,22 +223,43 @@ class Server{
                         }
                     }
                 }
+
             }catch(Exception e){//mmm exceptions
                 e.printStackTrace();
             }
 
+            /**COPY THE ENTIRE TRY/CATCH BLOCK**/
             //handles all messages within the game
             //receives messages from client, puts them in the proper game queue to be dealt with by the game thread
-            try{
-                while(reader.ready()){//while there are messages from the client
-                    msg=reader.readLine();//get the message
-                    for(Game g: games){//loop through all games to find the one that matches the client's
-                        if(gameName.equalsIgnoreCase(g.getGameName())){
-                            g.addMessage(msg);//add the message to the proper game's queue
+            try {
+                while (playing) {
+                    msg = reader.readLine();//get the message
+
+                    if (!msg.equals(null)) {//while there are messages from the client
+
+                        System.out.println("message: " + msg);
+
+                        for (Game g : games) {//loop through all games to find the one that matches the client's
+                            System.out.println("game name in list: " + g.getGameName());
+                            System.out.println("game name: " + gameName);
+                            if (gameName.equalsIgnoreCase(g.getGameName())) {
+                                g.addMessage(msg);//add the message to the proper game's queue
+                                System.out.println("message added to queue of game: " + g.getGameName());
+                            }
                         }
                     }
                 }
             }catch(Exception e){//woohoo i love catching exceptions
+                int index=-1;//this block lets the server disconnect the client/remove them from the client list
+
+                for(ClientThread c: clients){//find user in list
+                    if(c.getSocket().equals(socket)){
+                        index=clients.indexOf(c);
+                    }
+                }
+                System.out.println("user disconnected: "+clients.get(index).getUsername());
+                clients.remove(index);//remove them
+
                 e.printStackTrace();
             }
         }
@@ -225,15 +275,18 @@ class Server{
         //0 = waiting to begin round, if round is 0, hand size 6, if not 0, hand size 1
         //1 = waiting for players to pick cards
         //2 = waiting for czar to pick winner
+        //3 = game over
 
+        private int roundNum;//keep track of how many rounds have passed
+        private int numReady;
         private int numPlayers;
         private String name;
         private ArrayList<ClientThread> players;
+        private ArrayList<Card> deck;
+        private ArrayList<Card> selectedCards;
         private Queue<String> queue;
+        public static final int HAND_SIZE=6;//COPY THIS ITS IMPORTANT
 
-        public int getNumPlayers(){
-            return numPlayers;
-        }
         public String getGameName(){
             return name;
         }
@@ -243,6 +296,7 @@ class Server{
         public Queue<String> getQueue(){
             return queue;
         }
+
         public void addPlayer(ClientThread c){
             players.add(c);
         }
@@ -250,33 +304,146 @@ class Server{
             queue.enqueue(s);
         }
 
+
         Game(String n){//constructor
             state=0;
             players=new ArrayList<ClientThread>();
             name=n;
             queue=new Queue<String>();
-
+            deck=new ArrayList<Card>(); //THIS IS IMPORTANT, COPY THIS
         }
 
-        public void run(){
+        /**u know what COPY EVERYTHING FROM HERE DOWN**/
+        //gets cards from file, returns a deck of cards
+        public ArrayList<Card> getDeck() throws Exception {
+            File cardsFile=new File("cards.txt");
+            Scanner fileReader=new Scanner(cardsFile);
             String text;
+            boolean isNoun=false;
+            ArrayList<Card>d=new ArrayList<Card>();
+            int cardID=-1;
+
+            while(fileReader.hasNext()){
+                text=fileReader.nextLine();
+
+                if(text.equals("/adjective")){
+                    isNoun=false;
+                }else if(text.equals("/noun/")){
+                    isNoun=true;
+                }else if(!text.equals("")){
+                    d.add(new Card(text,null,isNoun, cardID++));
+                }
+            }
+            return d;//return deck arraylist
+        }//end getDeck
+
+        //drawCard
+        //returns a card from the deck, randomly selected
+        public Card drawCard(String player){
+            int randomNum;
+
+            randomNum=(int)(Math.random()*deck.size());
+            System.out.println("random number: "+randomNum);
+
+            while(deck.get(randomNum).getPlayer()!=null || deck.get(randomNum).getNoun()){//make sure the card drawn is not already in another player's hand AND it is an adjective card
+                randomNum=(int)(Math.random()*deck.size());
+            }
+
+            deck.get(randomNum).setPlayer(player);//indicate that card is in player's hand
+            return deck.get(randomNum);
+        }
+
+        //handToString
+        //adds player's cards into a single string -- format: "sexy+motivational+should be gotten rid of ASAP+senseless+"
+        public String handToString(ArrayList<Card> h){
+            String s="";
+
+            for(Card c: h){
+                s+=c.getText()+"+";
+            }
+            System.out.println("concatenated hand: "+s);
+
+            return s;
+        }
+
+        //run
+        //handles basically everything
+        public void run(){
+            String msg;
+
+            System.out.println("game thread running");
 
             try{
-                while(!queue.isEmpty()){
-                    text=queue.dequeue();
-                    if(text.contains("/chat/")) { //send message to all players if player enters stuff into the game chat
-                        for (ClientThread c : players) {
-                            c.getWriter().println(text);
-                        }
-                    }else if(text.contains("/new player/")){
+                while(state!=3) {
+                    if (!queue.isEmpty()) {
+                        msg = queue.dequeue();
+                        System.out.println("message from server: " + msg);
+                        if (msg.contains("/chat/")) { //send message to all players if player enters stuff into the game chat
+                            for (ClientThread c : players) {
+                                c.getWriter().println(msg);
+                            }
+                        } else if (msg.contains("/new player/")) {//send a "[PLAYER NAME] JOINED GAME!" message to all players
+                            for (ClientThread c : players) {
+                                c.getWriter().println(msg.substring(msg.indexOf("/new player/") + 12) + " joined the game.");
+                                System.out.println("new player joined game");
+                            }
+                        } else if (msg.contains("/start game/")) {//if person who created game starts the game
+                            System.out.println("YAAAS game started");
+                            deck=getDeck();//get deck from file
+                            System.out.println("OOOOOH deck exists");
+                            for (ClientThread c : players) {//go through every player
+                                for (int i = 0; i < HAND_SIZE; i++) {//draw six cards randomly from the deck and give to player
+                                    c.addCard(drawCard(c.getUsername()));
+                                }
+                                c.getWriter().println("/your hand/" + handToString(c.getHand()));//concatenate hand into a single string for sending
+                            }
+                            state = 1;//change state to 1
 
+                        } else if (msg.contains("/ready/")) {//if player is ready, start next phase of game
+                            for (ClientThread c : players) {//find client in list, change status to ready
+                                if (msg.substring(msg.indexOf("/ready/") + 7).equals(c.getUsername())) {
+                                    c.setReady(true);
+                                    if (state == 2) {//if waiting for players to select cards, and server receives a card selection
+                                        for (Card k : c.getHand()) {//go through all cards in the client's hand and find the card they picked
+                                            if (k.getID() == Integer.valueOf(msg.substring(msg.indexOf("/card/") + 6))) {//card is identified based on card ID number b/c duplicate cards are a thing
+                                                selectedCards.add(k);//add card to list of selected cards that czar can pick from
+                                                c.removeCard(k);//remove card from player's hand
+                                            }
+                                        }
+                                    }
+
+                                }
+                            }
+
+                            for (ClientThread c : players) {//count how many players are ready to start the next stage
+                                if (c.getReady()) {
+                                    numReady++;
+                                }
+                            }
+
+                            if (numReady == players.size()) {//if everyone is ready to move on
+                                if (state == 1) {//if waiting to start round
+                                    //pick a czar -- random if round==0, shift over 1 if round>0
+                                    //pick a noun card and tell everyone what it is
+                                    //give everyone another card if their hand size is <6
+                                    //wait for people to pick cards
+                                    //change state to 2
+                                } else if (state == 2) {//if waiting for players to pick cards
+                                    //
+                                } else if (state == 3) {
+
+                                }
+
+                                for (ClientThread c : players) {
+                                    c.setReady(false);
+                                }
+                            }
+                        }
                     }
                 }
             }catch(Exception e){
                 e.printStackTrace();
             }
-
         }
-
     }
 }
