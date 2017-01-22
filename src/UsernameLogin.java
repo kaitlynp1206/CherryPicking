@@ -17,7 +17,7 @@ import java.awt.event.WindowListener;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
-public class UsernameLogin {
+public class UsernameLogin extends Client {
 
 	private static JFrame usernameFrame;
 	private JTextField usernameLabel;
@@ -93,11 +93,11 @@ public class UsernameLogin {
 		startButton.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent e){
 				username = usernameLabel.getText().trim();
-				Client.tempMessage=username;
-				Client.start=true;
+				setTempMessage(username);
+				startRun();
 				try {
-					if ((!authenticated) && (Client.getAuthenticateUsername())) {
-						Client.username = username;
+					if ((!authenticated) && (getAuthenticateUsername())) {
+						setUsername(username);;
 						authenticated = true;
 						System.out.println("Success");
 					}
@@ -105,6 +105,7 @@ public class UsernameLogin {
 					error.printStackTrace();
 				}
 				if (authenticated) {
+					System.out.println("Good jub");
 					close();
 				} else {
 					// Error label
