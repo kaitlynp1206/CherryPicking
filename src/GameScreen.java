@@ -21,7 +21,7 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.BorderLayout;
 
-public class GameScreen {
+public class GameScreen extends Client {
 
 	private Font displayFont = new Font("Bodoni MT", Font.ITALIC, 20);
 	private Font cardFont = new Font("Book Antiqua", Font.PLAIN, 11);
@@ -33,6 +33,7 @@ public class GameScreen {
 	static String msg;
 	private static int cardSelected=-1;
 	static boolean gameActivated = false;
+	
 
 	private static WindowListener windowListener = new WindowAdapter() {
 		@Override
@@ -92,7 +93,7 @@ public class GameScreen {
 		groupLabel.setForeground(Color.WHITE);
 		groupLabel.setFont(displayFont);
 
-		JLabel groupNameLabel = new JLabel(Client.groupName);
+		JLabel groupNameLabel = new JLabel(getGroupName());
 		groupNameLabel.setBounds(10, 37, 160, 30);
 		groupNameLabel.setForeground(Color.RED);
 		groupNameLabel.setFont(groupNameFont);
@@ -124,6 +125,7 @@ public class GameScreen {
 		chatDisplay.setText("");
 		chatDisplay.setLineWrap(true);
 		chatDisplay.setWrapStyleWord(true);
+		chatDisplay.setEditable(false);
 		chatDisplay.setBackground(Color.WHITE);
 
 		JPanel chatMessagePanel = new JPanel();
@@ -153,7 +155,7 @@ public class GameScreen {
 			public void actionPerformed(ActionEvent e){
 				msg = chatMessage.getText().trim();
 				if (msg!=""){
-					chatDisplay.append(Client.username + ": " + msg + "\n");
+					chatDisplay.append(getUsername() + ": " + msg + "\n");
 					System.out.println(msg);
 					chatMessage.setText("");
 				}
@@ -211,7 +213,7 @@ public class GameScreen {
 				}
 
 				if (cardSelected!=-1){
-
+					//Client.message="/cardSelected/";//+hand number
 				}
 			}
 		});
@@ -243,7 +245,7 @@ public class GameScreen {
 		});
 		personalPanel.add(exitButton);
 
-		JLabel usernameLabel = new JLabel(Client.username);
+		JLabel usernameLabel = new JLabel(getUsername());
 		usernameLabel.setForeground(Color.BLACK);
 		usernameLabel.setFont(new Font("Bodoni MT", Font.ITALIC, 26));
 		usernameLabel.setBounds(10, 11, 185, 20);
@@ -310,7 +312,6 @@ public class GameScreen {
 	public static void exit(){
 		frmCherryPicking.dispose();
 		active=false;
-		Client.clientRunning=false;
 	}
 
 	public synchronized boolean getStatus(){
