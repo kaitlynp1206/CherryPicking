@@ -3,33 +3,53 @@
  */
 public class Card {
     private String text;
-    private String user;
+    private String player;
     private boolean isNoun;
+    private int cardID;
+
+    Card(String text){
+        this.text=text;
+    }
 
     Card (String text, String user, boolean isNoun, int cardID){
         this.text=text;
-        this.user=user;
+        this.player=user;
         this.isNoun=isNoun;
+        this.cardID=cardID;
     }
 
-    String getText(){
+    //COPY THIS CONSTRUCTOR
+    Card (String text, int cardID){
+        this.text=text;
+        this.cardID=cardID;
+    }
+
+    public String getText(){
         return this.text;
     }
-    void setText(String t){
+    public void setText(String t){
         this.text=t;
     }
 
-    String getUser(){
-        return this.user;
+    public String getPlayer(){
+        return this.player;
     }
-    void setUser(String u){
-        this.user=u;
+    public void setPlayer(String p){
+        this.player=p;
     }
 
-    boolean getIsNoun(){
+    public boolean getNoun(){
         return isNoun;
     }
-    void setIsNoun(boolean n){
+    public void setNoun(boolean n){
         this.isNoun=n;
+    }
+
+
+    public void setID(int i){
+        cardID=i;
+    }
+    public int getID(){
+        return cardID;
     }
 }
