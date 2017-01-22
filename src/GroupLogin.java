@@ -16,7 +16,7 @@ import javax.swing.JLabel;
 import javax.swing.JTextField;
 import javax.swing.JButton;
 
-public class GroupLogin {
+public class GroupLogin extends Client {
 
 	private static JFrame groupFrame;
 	private JTextField groupNameLabel;
@@ -94,12 +94,12 @@ public class GroupLogin {
 		newGameButton.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent e){
 				groupName = groupNameLabel.getText().trim();
-				Client.tempMessage=groupName;
-				Client.gameSelection=1;
-				Client.start=true;
+				setTempMessage(groupName);
+				setGameSelection(1);
+				startRun();
 				try {
-					if ((!authenticated) && (Client.getAuthenticateGroupName())){
-						Client.groupName = groupName;
+					if ((!authenticated) && (getAuthenticateGroupName())){
+						setGroupName(groupName);
 						authenticated=true;
 					}
 				} catch (Exception error){
@@ -117,12 +117,12 @@ public class GroupLogin {
 		joinGameButton.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent e){
 				groupName = groupNameLabel.getText().trim();
-				Client.tempMessage=groupName;
-				Client.gameSelection=2;
-				Client.start=true;
+				setTempMessage(groupName);
+				setGameSelection(2);
+				startRun();
 				try {
-					if ((!authenticated) && (Client.getAuthenticateGroupName())){
-						Client.groupName = groupName;
+					if ((!authenticated) && (getAuthenticateGroupName())){
+						setGroupName(groupName);
 						authenticated=true;
 					}
 				} catch (Exception error){
