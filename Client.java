@@ -36,11 +36,12 @@ public class Client {
             t.start();//start the stupid thing
 
             //this fragment constantly checks for user input and sends it to the server but i don't want that rn
+            /**i guess just copy the entire block here*/
             consoleReader = new BufferedReader(new InputStreamReader(System.in));
             while(reader.ready()) {//write to socket
                 msg=reader.readLine();
-                if(msg.contains("/chat/")) {
-                    writer.println(msg);
+                if(msg.contains("/chat/")) {//if the user wants to chat
+                    writer.println("/chat/"+username+": "+msg.substring(6));//send the message - format: "/chat/username: message"
                 }
             }
 
@@ -97,91 +98,81 @@ public class Client {
             boolean validCard;
 
             try {
-                while(!playing){//while the user is not in any game, prompt to join or create one
-                    while(reader.ready()){
-                        msg=reader.readLine();
-                        System.out.println("/msg/"+msg);
+                while (true) {
+                    while (!playing) {//while the user is not in any game, prompt to join or create one
+                        while (reader.ready()) {
+                            msg = reader.readLine();
+                            System.out.println("/msg/" + msg);
 
-                        if(msg.contains("/send game name/") || msg.contains("/game name invalid/")){//if prompted to send game name
-                            if(msg.contains("/game name invalid/")){
-                                System.out.println("that name is invalid. try again.");//tell the user what was wrong with their previous game name attempt
+                            if (msg.contains("/send game name/") || msg.contains("/game name invalid/")) {//if prompted to send game name
+                                if (msg.contains("/game name invalid/")) {
+                                    System.out.println("that name is invalid. try again.");//tell the user what was wrong with their previous game name attempt
+                                }
+
+                                System.out.print("enter n to start a new game, or j to join a game: ");//replace with gui
+                                text = input.nextLine();
+
+                                while (!text.equalsIgnoreCase("n") && !text.equalsIgnoreCase("j")) { //error checking, delete when implementing gui
+                                    System.out.print("not a valid option. enter either n or j: ");
+                                    text = input.nextLine();
+                                }
+
+                                if (text.equals("n")) {//if user starts a new game, prompt for name and send with "/new game/"
+                                    System.out.print("enter a game name: ");
+                                    text = input.nextLine();
+                                    writer.println("/new game/game name check/" + text);//send the proposed game name to the server
+
+                                } else {//if user joins a game, prompt for name and send with "/join game/"
+                                    System.out.println("enter a game name: ");
+                                    text = input.nextLine();
+                                    writer.println("/join game/game name check/" + text);
+                                }
+                            } else if (msg.contains("/game name okay/")) {//if user is able to join game/create a new one
+                                if (msg.contains("/new/")) {
+                                    creator = true;
+                                    System.out.print("enter g to start: ");
+                                    text = input.nextLine();
+                                    writer.println("/start game/");//tells server to start the game, u can replace this with a start button and only have it show if the player created the game
+                                }
+                                playing = true;//allow user to move on
                             }
-
-                            System.out.print("enter n to start a new game, or j to join a game: ");//replace with gui
-                            text=input.nextLine();
-
-                            while(!text.equalsIgnoreCase("n") && !text.equalsIgnoreCase("j")){ //error checking, delete when implementing gui
-                                System.out.print("not a valid option. enter either n or j: ");
-                                text=input.nextLine();
-                            }
-
-                            if(text.equals("n")) {//if user starts a new game, prompt for name and send with "/new game/"
-                                System.out.print("enter a game name: ");
-                                text=input.nextLine();
-                                writer.println("/new game/game name check/" + text);//send the proposed game name to the server
-
-                            }else{//if user joins a game, prompt for name and send with "/join game/"
-                                System.out.println("enter a game name: ");
-                                text=input.nextLine();
-                                writer.println("/join game/game name check/"+text);
-                            }
-                        }else if(msg.contains("/game name okay/")){//if user is able to join game/create a new one
-                            if(msg.contains("/new/")){
-                                creator=true;
-                                System.out.print("enter g to start: ");
-                                text=input.nextLine();
-                                writer.println("/start game/");//tells server to start the game, u can replace this with a start button and only have it show if the player created the game
-                            }
-                            playing=true;//allow user to move on
                         }
                     }
-                }
 
-                while(playing) {//game loop basically
-                    if (reader.ready()) {//if server sent a message
-                        msg = reader.readLine();
-                        validCard = false;
+                    while (playing) {//game loop basically
+                        if (reader.ready()) {//if server sent a message
+                            msg = reader.readLine();
+                            validCard = false;
 
-                        if (msg.contains("/your hand/")) {//if receiving hand of cards, print them all out
-                            msg = msg.substring(msg.lastIndexOf("/") + 1);//remove the "/your hand/" part of the message
+                            if (msg.contains("/your hand/")) {//if receiving hand of cards, print them all out
+                                msg = msg.substring(msg.lastIndexOf("/") + 1);//remove the "/your hand/" part of the message
 
-                            hand.clear();//empty the current hand, replace with new hand
-                            while (msg.length() > 1) {//display cards
-                                hand.add(new Card(msg.substring(0, msg.indexOf("(")), Integer.valueOf(msg.substring(msg.indexOf("(") + 1, msg.indexOf(")")))));
-                                msg = msg.substring(msg.indexOf("+") + 1);//remove first card from string
-                            }
-                            System.out.println("YOUR HAND: ");//COPY THIS just for aesthetics
-                            for (Card c : hand) {//display cards with card numbers
-                                System.out.println("CARD " + c.getID() + ": " + c.getText());
-                            }
-
-                            //writer.println("/ready/" + username);//tell server to go to next stage
-
-                        }
-                        /**COPY SINGLE ELSE IF BLOCK**/
-                        else if(msg.contains("/selected cards/")){//display the selected cards
-                            msg=msg.substring(msg.lastIndexOf("/")+1);
-                            selected.clear();//empty the current hand, replace with new hand
-                            while (msg.length() > 1) {//display cards
-                                selected.add(new Card(msg.substring(0, msg.indexOf("(")), Integer.valueOf(msg.substring(msg.indexOf("(") + 1, msg.indexOf(")")))));
-                                msg = msg.substring(msg.indexOf("+") + 1);//remove first card from string
-                            }
-                            System.out.println("CONTENDERS: ");//tell players that the following cards are the ones they picked
-                            for (Card c : selected) {//display cards with card numbers
-                                System.out.println("CARD " + c.getID() + ": " + c.getText());
-                            }
-                        }
-                        else if (msg.contains("/pick card/")) {//if player is prompted to pick a card
-                            System.out.print("select the number of the card you want: ");
-                            text = input.nextLine();//get player's card
-
-                            for (Card c : hand) {//see if player's selected card matches any of the ones in their hand
-                                if (Integer.valueOf(text) == c.getID()) {
-                                    validCard = true;
+                                hand.clear();//empty the current hand, replace with new hand
+                                while (msg.length() > 1) {//display cards
+                                    hand.add(new Card(msg.substring(0, msg.indexOf("(")), Integer.valueOf(msg.substring(msg.indexOf("(") + 1, msg.indexOf(")")))));
+                                    msg = msg.substring(msg.indexOf("+") + 1);//remove first card from string
                                 }
+                                System.out.println("YOUR HAND: ");//COPY THIS just for aesthetics
+                                for (Card c : hand) {//display cards with card numbers
+                                    System.out.println("CARD " + c.getID() + ": " + c.getText());
+                                }
+
+                                //writer.println("/ready/" + username);//tell server to go to next stage
+
                             }
-                            while (!validCard) {//error checking
-                                System.out.println("invalid number. try again: ");
+                            else if (msg.contains("/selected cards/")) {//display the selected cards
+                                msg = msg.substring(msg.lastIndexOf("/") + 1);
+                                selected.clear();//empty the current hand, replace with new hand
+                                while (msg.length() > 1) {//display cards
+                                    selected.add(new Card(msg.substring(0, msg.indexOf("(")), Integer.valueOf(msg.substring(msg.indexOf("(") + 1, msg.indexOf(")")))));
+                                    msg = msg.substring(msg.indexOf("+") + 1);//remove first card from string
+                                }
+                                System.out.println("CONTENDERS: ");//tell players that the following cards are the ones they picked
+                                for (Card c : selected) {//display cards with card numbers
+                                    System.out.println("CARD " + c.getID() + ": " + c.getText());
+                                }
+                            } else if (msg.contains("/pick card/")) {//if player is prompted to pick a card
+                                System.out.print("select the number of the card you want: ");
                                 text = input.nextLine();//get player's card
 
                                 for (Card c : hand) {//see if player's selected card matches any of the ones in their hand
@@ -189,65 +180,76 @@ public class Client {
                                         validCard = true;
                                     }
                                 }
-                            }
-                            writer.println("/ready/" + username + "/card/" + text);//tell the server which card the player picked
+                                while (!validCard) {//error checking
+                                    System.out.println("invalid number. try again: ");
+                                    text = input.nextLine();//get player's card
 
-                        }
-                        /**COPY SINGLE ELSE IF**/
-                        else if(msg.contains("/pick winner/")){
-                            System.out.print("select the number of the card you think should win: ");
-                            text=input.nextLine();
-
-                            for (Card c : selected) {//see if player's selected card matches any of the ones in the selected array
-                                if (Integer.valueOf(text) == c.getID()) {
-                                    validCard = true;
+                                    for (Card c : hand) {//see if player's selected card matches any of the ones in their hand
+                                        if (Integer.valueOf(text) == c.getID()) {
+                                            validCard = true;
+                                        }
+                                    }
                                 }
-                            }
-                            while (!validCard) {//error checking
-                                System.out.println("invalid number. try again: ");
-                                text = input.nextLine();//get player's card
+                                writer.println("/ready/" + username + "/card/" + text);//tell the server which card the player picked
 
-                                for (Card c : selected) {//see if player's selected card matches any of the ones in their hand
+                            }
+                            else if (msg.contains("/pick winner/")) {
+                                System.out.print("select the number of the card you think should win: ");
+                                text = input.nextLine();
+
+                                for (Card c : selected) {//see if player's selected card matches any of the ones in the selected array
                                     if (Integer.valueOf(text) == c.getID()) {
                                         validCard = true;
                                     }
                                 }
-                            }
-                            writer.println("/ready/" + username + "/card/" + text);//tell the server which card the player picked
+                                while (!validCard) {//error checking
+                                    System.out.println("invalid number. try again: ");
+                                    text = input.nextLine();//get player's card
 
-                        } else if (msg.contains("/you are czar/")){ //send ready message right away if player is czar -- they don't need to pick an adjective card
-                            System.out.println("you are the czar. waiting for players to send in selections");
-                            writer.println("/ready/"+username);
-                        }
-                        /**COPY ELSE IFS**/
-                        else if(msg.contains("/winner/")){//if the winner has been picked and server is waiting to start next round
-                            if(msg.contains("/card/")) {
-                                System.out.println("WINNER: " + msg.substring(8, msg.indexOf("/card/")));
-                                System.out.println("CARD: " + msg.substring(msg.indexOf("/card/") + 1));
-                                System.out.print("enter anything to start the next round: ");
-                                text = input.nextLine();
+                                    for (Card c : selected) {//see if player's selected card matches any of the ones in their hand
+                                        if (Integer.valueOf(text) == c.getID()) {
+                                            validCard = true;
+                                        }
+                                    }
+                                }
+                                writer.println("/ready/" + username + "/card/" + text);//tell the server which card the player picked
+
+                            } else if (msg.contains("/you are czar/")) { //send ready message right away if player is czar -- they don't need to pick an adjective card
+                                System.out.println("you are the czar. waiting for players to send in selections");
                                 writer.println("/ready/" + username);
-                            }else{//if the game is over
-
                             }
-                        }else if(msg.contains("/confirm start/")){
-                            writer.println("/ready/"+username+"/card/");
-                        } else if(msg.contains("/game over/")){
-                            System.out.println("GAME OVER! WINNER: "+msg.substring(11));//tell player game is over
-                            System.out.print("enter anything to exit the game: ");
-                            text=input.nextLine();
-                            writer.println("/exit/"+username);//tell server user has disconnected
-                            playing=false;
-                        } else{
-                            System.out.println(msg);
+                            else if (msg.contains("/winner/")) {//if the winner has been picked and server is waiting to start next round
+                                if (msg.contains("/card/")) {
+                                    System.out.println("WINNER: " + msg.substring(8, msg.indexOf("/card/")));
+                                    System.out.println("CARD: " + msg.substring(msg.indexOf("/card/") + 1));
+                                    System.out.print("enter anything to start the next round: ");
+                                    text = input.nextLine();
+                                    writer.println("/ready/" + username);
+                                } else {//if the game is over
+
+                                }
+                            } else if (msg.contains("/confirm start/")) {
+                                writer.println("/ready/" + username + "/card/");
+                            } else if (msg.contains("/game over/")) {
+                                System.out.println("GAME OVER! WINNER: " + msg.substring(11));//tell player game is over
+                                System.out.print("enter anything to exit the game: ");
+                                text = input.nextLine();
+                                writer.println("/exit/" + username);//tell server user has disconnected
+                                playing = false;
+                            }
+                            //copy this too
+                            else if(msg.contains("/chat/")){
+                                System.out.println(msg.substring(7));
+                            }else{
+                                System.out.println(msg);
+                            }
                         }
                     }
                 }
 
-            } catch (Exception e) {
+            } catch(Exception e){
                 e.printStackTrace();
             }
-
         }
     }
 }
