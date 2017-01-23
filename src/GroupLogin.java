@@ -16,6 +16,13 @@ import javax.swing.JLabel;
 import javax.swing.JTextField;
 import javax.swing.JButton;
 
+/**
+ * GroupLogin.java
+ * @author Kaitlyn Paglia
+ * @version 1.0
+ * 1/23/2017
+ * Obtains and authenticates groupName - GUI
+ */
 public class GroupLogin extends Client {
 
 	private static JFrame groupFrame;
@@ -23,6 +30,10 @@ public class GroupLogin extends Client {
 	private static String groupName;
 	private static boolean authenticated = false;
 
+	/**
+	 * Window Listener
+	 * closes screen and exits program
+	 */
 	private static WindowListener windowListener = new WindowAdapter() {
 		@Override
 		public void windowClosing(WindowEvent e) {
@@ -101,12 +112,10 @@ public class GroupLogin extends Client {
 				while(!getRun()){ //allow for client to get to if statement after try&catch
 				}
 				try {
-					System.out.println("G"+getAuthenticateGroupName());
 					if (getAuthenticateGroupName()){
 						setGroupName(groupName);
 						authenticated=true;
-						System.out.println("Success2");
-					}
+						}
 				} catch (Exception error){
 					error.printStackTrace();
 				}
@@ -118,7 +127,7 @@ public class GroupLogin extends Client {
 					System.out.println("Error: Group name already exists");
 				}
 				stopRun();
-				System.out.println("Test6");
+				stop();
 			}
 		});
 
@@ -134,8 +143,7 @@ public class GroupLogin extends Client {
 					if (getAuthenticateGroupName()){
 						setGroupName(groupName);
 						authenticated=true;
-						System.out.println("Success3");
-					}
+											}
 				} catch (Exception error){
 					error.printStackTrace();
 				}
@@ -147,14 +155,23 @@ public class GroupLogin extends Client {
 					System.out.println("Error: Group name not found");
 				}
 				stopRun();
+				stop();
 			}
 		});
 	}
 
+	/**
+	 * exit
+	 * closes frame after exit button is clicked
+	 */
 	public static void exit(){
 		groupFrame.dispose();
 	}
 
+	/**
+	 * close
+	 * closes frame after start button is clicked
+	 */
 	public static void close() {
 		groupFrame.dispose();
 		GameScreen.startGameScreen();
