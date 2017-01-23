@@ -22,16 +22,14 @@ public class GroupLogin extends Client {
 	private JTextField groupNameLabel;
 	private static String groupName;
 	private static boolean authenticated = false;
-	private static boolean active = true;
-	static boolean gameMaker;
-	
+
 	private static WindowListener windowListener = new WindowAdapter() {
-        @Override
-        public void windowClosing(WindowEvent e) {
-            exit();
-        }
-    };
-	
+		@Override
+		public void windowClosing(WindowEvent e) {
+			exit();
+		}
+	};
+
 	/**
 	 * Launch the application.
 	 */
@@ -54,6 +52,7 @@ public class GroupLogin extends Client {
 		groupFrame = new JFrame();
 		groupFrame.getContentPane().setBackground(Color.GRAY);
 		groupFrame.getContentPane().setLayout(null);
+		groupFrame.setResizable(false);
 
 		JLabel titleLabel = new JLabel("Cherry Picking!");
 		titleLabel.setFont(new Font("Lithos Pro Regular", Font.ITALIC, 31));
@@ -84,9 +83,11 @@ public class GroupLogin extends Client {
 			}
 		});
 		groupFrame.getContentPane().add(groupNameLabel);
-		
+
 		JLabel errorLabel = new JLabel("");
-		errorLabel.setBounds(121, 304, 146, 23);
+		errorLabel.setForeground(Color.RED);
+		errorLabel.setFont(new Font("Tahoma", Font.PLAIN, 11));
+		errorLabel.setBounds(110, 303, 264, 23);
 		groupFrame.getContentPane().add(errorLabel);
 		groupFrame.setBounds(100, 100, 400, 400);
 		groupFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -97,20 +98,27 @@ public class GroupLogin extends Client {
 				setTempMessage(groupName);
 				setGameSelection(1);
 				startRun();
+				while(!getRun()){ //allow for client to get to if statement after try&catch
+				}
 				try {
-					if ((!authenticated) && (getAuthenticateGroupName())){
+					System.out.println("G"+getAuthenticateGroupName());
+					if (getAuthenticateGroupName()){
 						setGroupName(groupName);
 						authenticated=true;
+						System.out.println("Success2");
 					}
 				} catch (Exception error){
 					error.printStackTrace();
 				}
 				if (authenticated){
-					gameMaker=true;
+					System.out.println("Good1");
 					close();
 				} else{
 					errorLabel.setText("Error: Group name already exists");
+					System.out.println("Error: Group name already exists");
 				}
+				stopRun();
+				System.out.println("Test6");
 			}
 		});
 
@@ -120,35 +128,37 @@ public class GroupLogin extends Client {
 				setTempMessage(groupName);
 				setGameSelection(2);
 				startRun();
+				while(!getRun()){ //allow for client to get to if statement after try&catch
+				}
 				try {
-					if ((!authenticated) && (getAuthenticateGroupName())){
+					if (getAuthenticateGroupName()){
 						setGroupName(groupName);
 						authenticated=true;
+						System.out.println("Success3");
 					}
 				} catch (Exception error){
 					error.printStackTrace();
 				}
 				if (authenticated){
-					gameMaker=false;
+					System.out.println("Good2");
 					close();
 				} else {
 					errorLabel.setText("Error: Group name not found");
+					System.out.println("Error: Group name not found");
 				}
+				stopRun();
 			}
 		});
 	}
 
 	public static void exit(){
 		groupFrame.dispose();
-		active=false;
 	}
-	
-	public void close() {
+
+	public static void close() {
 		groupFrame.dispose();
-		active=false;
+		GameScreen.startGameScreen();
+
 	}
-	
-	public synchronized boolean getStatus(){
-		return active;
-	}
+
 }
