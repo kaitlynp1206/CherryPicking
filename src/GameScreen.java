@@ -1,11 +1,9 @@
 import javax.swing.JFrame;
 import java.awt.Font;
-import java.awt.Image;
 
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.DefaultListModel;
-import javax.swing.ImageIcon;
 import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JTextArea;
@@ -25,7 +23,7 @@ import java.awt.BorderLayout;
 public class GameScreen extends Client {
 
 	private Font displayFont = new Font("Bodoni MT", Font.ITALIC, 20);
-	private Font cardFont = new Font("Book Antiqua", Font.PLAIN, 11);
+	private static Font cardFont = new Font("Book Antiqua", Font.PLAIN, 11);
 	private Font groupNameFont = new Font("Bodoni MT", Font.BOLD, 25);
 	public static JFrame frmCherryPicking;
 	public static JFrame helpFrame;
@@ -34,9 +32,10 @@ public class GameScreen extends Client {
 	static boolean gameActivated = false;
 	static JTextArea handCards[] = new JTextArea[6];
 	private static ArrayList<Card> currentHand = new ArrayList<Card>();
-	private boolean selected = false;
-	
-	
+	private static JPanel cardsPanel = new JPanel();
+
+
+
 
 	private static WindowListener windowListener = new WindowAdapter() {
 		@Override
@@ -62,12 +61,47 @@ public class GameScreen extends Client {
 		frmCherryPicking.setVisible(true);
 	}
 
+	public static void refreshCards(){
+		cardsPanel.removeAll();
+		cardsPanel.setBackground(Color.DARK_GRAY);
+		cardsPanel.setBounds(179, 297, 607, 122);
+		cardsPanel.setLayout(null);
+		int count = 0;
+		for (Card c: hand){
+			handCards[count] = new JTextArea(c.getText());
+			handCards[count].setLineWrap(true);
+			handCards[count].setBounds(10 + 99*count, 11, 89, 100);
+			handCards[count].setEditable(false);
+			handCards[count].setLineWrap(true);
+			handCards[count].setWrapStyleWord(true);
+			handCards[count].setFont(cardFont);
+			cardsPanel.add(handCards[count]);
+			count++;
+		}
+		for (JTextArea cards : handCards){
+			cards.addMouseListener(
+					new MouseAdapter(){
+						public void mousePressed(MouseEvent e){
+							for (int i=0; i<6; i++){
+								handCards[i].setBackground(Color.WHITE);
+							}
+							cards.setBackground(Color.RED);
+							System.out.println(cards.getBackground());
+						}
+					});
+		}
+		cardsPanel.revalidate();
+		cardsPanel.repaint();
+		frmCherryPicking.revalidate();
+		frmCherryPicking.repaint();
+	}
+
 	/**
 	 * updateScoresList
 	 */
 	public static void updateScoresList(){
 		defaultList = new DefaultListModel<>();
-
+		//for (String players: players)
 	}
 
 	/**
@@ -83,6 +117,42 @@ public class GameScreen extends Client {
 		frmCherryPicking.addWindowListener(windowListener);
 		frmCherryPicking.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frmCherryPicking.getContentPane().setLayout(null);
+
+
+		JPanel personalPanel = new JPanel();
+		personalPanel.setBackground(Color.LIGHT_GRAY);
+		personalPanel.setBounds(179, 255, 607, 43);
+		frmCherryPicking.getContentPane().add(personalPanel);
+		personalPanel.setLayout(null);
+
+		JButton exitButton = new JButton("Leave Game");
+		exitButton.setBounds(491, 11, 106, 23);
+		exitButton.addActionListener(new ActionListener(){
+			public void actionPerformed(ActionEvent e){
+				exit();
+			}
+		});
+		personalPanel.add(exitButton);
+
+		JLabel usernameLabel = new JLabel(getUsername());
+		usernameLabel.setForeground(Color.BLACK);
+		usernameLabel.setFont(new Font("Bodoni MT", Font.ITALIC, 26));
+		usernameLabel.setBounds(10, 11, 185, 20);
+		personalPanel.add(usernameLabel);
+
+		if (isCreator()){
+			JButton startGameButton = new JButton("Start Game");
+			startGameButton.setBounds(375, 11, 106, 23);
+			startGameButton.addActionListener(new ActionListener(){
+				public void actionPerformed(ActionEvent e){
+					System.out.println("GS " + Client.start);
+					Client.start=true;
+					System.out.println("Starting Game");
+					startRun();
+				}
+			});
+			personalPanel.add(startGameButton);
+		}
 
 		//initialize display panel - contains scores and chat room
 		JPanel displayPanel = new JPanel();
@@ -160,29 +230,27 @@ public class GameScreen extends Client {
 				if (msg!=""){
 					chatDisplay.append(getUsername() + ": " + msg + "\n");
 					System.out.println(msg);
+					setMsg("/chat/" + msg);
 					chatMessage.setText("");
 				}
 			}
 		});
 
 		//create and display cards
-		JPanel cardsPanel = new JPanel();
 		cardsPanel.setBackground(Color.DARK_GRAY);
 		cardsPanel.setBounds(179, 297, 607, 122);
 		frmCherryPicking.getContentPane().add(cardsPanel);
 		cardsPanel.setLayout(null);
 
-		for (int i=0; i<hand.size(); i++){
+		for (int i=0; i<6; i++){
 			handCards[i] = new JTextArea();
 			handCards[i].setLineWrap(true);
 			handCards[i].setBounds(10 + 99*i, 11, 89, 100);
-			handCards[i].setEditable(false);
+			//handCards[i].setEditable(false);
 			handCards[i].setLineWrap(true);
 			handCards[i].setWrapStyleWord(true);
 			handCards[i].setFont(cardFont);
-			handCards[i].setText(hand.get(i).getText());
 			cardsPanel.add(handCards[i]);
-
 		}
 		for (JTextArea cards : handCards){
 			cards.addMouseListener(
@@ -192,14 +260,12 @@ public class GameScreen extends Client {
 								handCards[i].setBackground(Color.WHITE);
 							}
 							cards.setBackground(Color.RED);
-							selected=true;
 							System.out.println(cards.getBackground());
 						}
 					});
 		}
-		
 
-		JPanel selectPanel = new JPanel(); //panel contains help and select card buttons
+		JPanel selectPanel = new JPanel();
 		selectPanel.setBackground(Color.LIGHT_GRAY);
 		selectPanel.setBounds(179, 418, 607, 43);
 		frmCherryPicking.getContentPane().add(selectPanel);
@@ -208,16 +274,14 @@ public class GameScreen extends Client {
 		selectCardButton.setBounds(205, 11, 196, 21);
 		selectCardButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				if (selected){
-					for (int i=0; i<6; i++){
-						//check for selected card
-						if (handCards[i].getBackground()==Color.RED){
-							setSelectedCard(currentHand.get(i).getID());
-						}
-						startRun();
+				int select=-1;
+				for (int i=0; i<6; i++){
+					//check for selected card
+					if (handCards[i].getBackground()==Color.RED){
+						select=i;
 					}
-				}else{
-					setSelectedCard(-1);
+					setSelectedCard(currentHand.get(select).getID());
+					startRun();
 				}
 				for (int i=0; i<6; i++){
 					handCards[i].setBackground(Color.WHITE);
@@ -236,41 +300,7 @@ public class GameScreen extends Client {
 			}
 		});
 
-		JPanel personalPanel = new JPanel();
-		personalPanel.setBackground(Color.LIGHT_GRAY);
-		personalPanel.setBounds(179, 255, 607, 43);
-		frmCherryPicking.getContentPane().add(personalPanel);
-		personalPanel.setLayout(null);
 
-		JButton exitButton = new JButton("Leave Game");
-		exitButton.setBounds(491, 11, 106, 23);
-		exitButton.addActionListener(new ActionListener(){
-			public void actionPerformed(ActionEvent e){
-				exit();
-			}
-		});
-		personalPanel.add(exitButton);
-
-		JLabel usernameLabel = new JLabel(getUsername());
-		usernameLabel.setForeground(Color.BLACK);
-		usernameLabel.setFont(new Font("Bodoni MT", Font.ITALIC, 26));
-		usernameLabel.setBounds(10, 11, 185, 20);
-		personalPanel.add(usernameLabel);
-
-		if (isCreator()){
-			JButton startGameButton = new JButton("Start Game");
-			startGameButton.setBounds(375, 11, 106, 23);
-			startGameButton.addActionListener(new ActionListener(){
-				public void actionPerformed(ActionEvent e){
-					if (Game.numPlayers>3){
-						System.out.println("Starting Game");
-						gameActivated = true;
-						startRun();
-					}
-				}
-			});
-			personalPanel.add(startGameButton);
-		}
 
 		JPanel gamePanel = new JPanel();
 		gamePanel.setBackground(Color.DARK_GRAY);
@@ -301,20 +331,7 @@ public class GameScreen extends Client {
 				resultsPanel.add(displayCards[i][j]);
 			}
 		}
-
-		JLabel countdownLabel = new JLabel("Countdown:");
-		countdownLabel.setForeground(Color.WHITE);
-		countdownLabel.setFont(new Font("Bodoni MT", Font.ITALIC, 22));
-		countdownLabel.setBounds(10, 169, 110, 20);
-		gamePanel.add(countdownLabel);
-
-		JLabel timerLabel = new JLabel("00:00:00");
-		timerLabel.setForeground(Color.WHITE);
-		timerLabel.setFont(new Font("Bodoni MT", Font.PLAIN, 35));
-		timerLabel.setBounds(20, 200, 120, 33);
-		gamePanel.add(timerLabel);
 	}
-
 
 	public static void exit(){
 		frmCherryPicking.dispose();
