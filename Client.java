@@ -12,8 +12,10 @@ public class Client {
     private static BufferedReader consoleReader;
     private static String username; //just in case i need to reference it
     private static boolean creator;//tells if person created game or joined it
-    private static ArrayList<Card>hand;//COPY THIS
-    private static ArrayList<Card> selected;//COPY THIS TOO
+    private static ArrayList<Card>hand;
+    private static ArrayList<Card> selected;
+    private static ArrayList<String>players;//COPY THIS
+    private static ArrayList<Integer>scores;//THIS TOO
 
     public static void main (String args[]){
         new Client().go();
@@ -27,6 +29,8 @@ public class Client {
             creator=false;
             hand=new ArrayList<Card>();
             selected=new ArrayList<Card>();
+            players=new ArrayList<String>();//COPY THIS
+            scores=new ArrayList<Integer>();//COPY THIS TOO
 
             socket = new Socket("localhost", 6666);//start up a socket
             reader = new BufferedReader(new InputStreamReader(socket.getInputStream())); //make reader and writer
@@ -237,10 +241,25 @@ public class Client {
                                 writer.println("/exit/" + username);//tell server user has disconnected
                                 playing = false;
                             }
-                            //copy this too
                             else if(msg.contains("/chat/")){
                                 System.out.println(msg.substring(7));
-                            }else{
+                            }
+                            //COPY thiS ELSE IF
+                            else if(msg.contains("/scores/")){
+                                msg=msg.substring(8);
+                                players.clear();
+                                scores.clear();
+                                while(msg.length()>1){
+                                    players.add(msg.substring(0,msg.indexOf("(")));
+                                    scores.add(Integer.valueOf(msg.substring(msg.indexOf("(")+1,msg.indexOf(")"))));
+                                    msg=msg.substring(msg.indexOf("+")+1);
+                                }
+                                //print the scores and players out
+                                for(int i=0;i<players.size();i++){
+                                    System.out.println(players.get(i)+": "+scores.get(i));
+                                }
+                            }
+                            else{
                                 System.out.println(msg);
                             }
                         }

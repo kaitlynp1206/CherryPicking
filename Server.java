@@ -185,104 +185,109 @@ class Server{
             String msg="";
             int numHappenings=0;
 
-            //get user to select or make new game
-            try {
+            while(running) {
+                //get user to select or make new game
+                try {
 
-                if(!playing){//tell client to send a game name
-                    writer.println("/send game name/"); //tell client to send a game name
-                }
+                    if (!playing) {//tell client to send a game name
+                        writer.println("/send game name/"); //tell client to send a game name
+                    }
 
-                while (!playing) {
-                    if(reader.ready()){
-                        msg=reader.readLine();
+                    while (!playing) {
+                        if (reader.ready()) {
+                            msg = reader.readLine();
 
-                        //System.out.println("/msg/"+msg);
+                            //System.out.println("/msg/"+msg);
 
-                        if(msg.contains("/game name check/")){ //format this line will be in: "/new game/game name check/gameName here" or "/join game/game name check/gameName here"
-                            for(Game g: games){//check it against all existing group names
-                                //System.out.println("game name: "+g.getGameName());
-                                if(msg.substring(msg.indexOf("/game name check/")+17).equalsIgnoreCase(g.getGameName())){
-                                    numHappenings++;
-                                }
-                            }
-
-
-                            /**COPY THIS ENTIRE IF/ELSE STATEMENT, i changed it**/
-                            if(numHappenings==0 && msg.contains("/new game/")){//if name is available and new game
-                                for(ClientThread c: clients){//loop through all clients
-                                    if(c.getUsername().equalsIgnoreCase(name)){//find the one belonging to the player, ie. this one
-                                        gameName=msg.substring(msg.indexOf("/game name check/")+17);
-                                        Game g=new Game(gameName, c);//create a new game thread with name and add client
-                                        games.add(g);//add game to list
-                                        g.start();
-                                        writer.println("/game name okay/new/");//tell client that name is good
-
-                                        g.addMessage("/new player/"+c.getUsername());
+                            if (msg.contains("/game name check/")) { //format this line will be in: "/new game/game name check/gameName here" or "/join game/game name check/gameName here"
+                                for (Game g : games) {//check it against all existing group names
+                                    //System.out.println("game name: "+g.getGameName());
+                                    if (msg.substring(msg.indexOf("/game name check/") + 17).equalsIgnoreCase(g.getGameName())) {
+                                        numHappenings++;
                                     }
                                 }
-                                playing=true; //give client go-ahead to play game
-                            }else if(numHappenings>0 && msg.contains("/join game/")){//if client wants to join game and game exists
-                                gameName=msg.substring(msg.indexOf("/game name check/")+17);
-                                //System.out.println("game name: "+gameName);
 
-                                for(ClientThread c: clients) {//go through all clients and find this one
-                                    if(c.getUsername().equalsIgnoreCase(name)) {
-                                        for(Game g: games) {//go through all games and find the one they want to join
-                                            if (gameName.equals(g.getGameName())) {
-                                                System.out.println("BLORP");//THIS IS IMPORTANT - KEEP THIS
 
-                                                writer.println("/game name okay/join/");
-                                                g.addPlayer(c);//add client to game
-                                                g.addMessage("/new player/"+c.getUsername());
-                                                playing=true;
+                                /**COPY THIS ENTIRE IF/ELSE STATEMENT, i changed it**/
+                                if (numHappenings == 0 && msg.contains("/new game/")) {//if name is available and new game
+                                    for (ClientThread c : clients) {//loop through all clients
+                                        if (c.getUsername().equalsIgnoreCase(name)) {//find the one belonging to the player, ie. this one
+                                            gameName = msg.substring(msg.indexOf("/game name check/") + 17);
+                                            Game g = new Game(gameName, c);//create a new game thread with name and add client
+                                            games.add(g);//add game to list
+                                            g.start();
+                                            writer.println("/game name okay/new/");//tell client that name is good
+
+                                            g.addMessage("/new player/" + c.getUsername());
+                                        }
+                                    }
+                                    playing = true; //give client go-ahead to play game
+                                } else if (numHappenings > 0 && msg.contains("/join game/")) {//if client wants to join game and game exists
+                                    gameName = msg.substring(msg.indexOf("/game name check/") + 17);
+                                    //System.out.println("game name: "+gameName);
+
+                                    for (ClientThread c : clients) {//go through all clients and find this one
+                                        if (c.getUsername().equalsIgnoreCase(name)) {
+                                            for (Game g : games) {//go through all games and find the one they want to join
+                                                if (gameName.equals(g.getGameName())) {
+                                                    System.out.println("BLORP");//THIS IS IMPORTANT - KEEP THIS
+
+                                                    writer.println("/game name okay/join/");
+                                                    g.addPlayer(c);//add client to game
+                                                    g.addMessage("/new player/" + c.getUsername());
+                                                    playing = true;
+                                                }
                                             }
                                         }
                                     }
+                                } else {//if game name is invalid
+                                    writer.println("/game name invalid/");//tell the client that.
                                 }
-                            }else{//if game name is invalid
-                                writer.println("/game name invalid/");//tell the client that.
-                            }
-                            numHappenings=0; //reset variable -- IMPORTANT
+                                numHappenings = 0; //reset variable -- IMPORTANT
 
-                        }
-                    }
-                }
-
-            }catch(Exception e){//mmm exceptions
-                e.printStackTrace();
-            }
-
-            /**COPY THE ENTIRE TRY/CATCH BLOCK**/
-            //handles all messages within the game
-            //receives messages from client, puts them in the proper game queue to be dealt with by the game thread
-            try {
-                while (playing) {
-                    currentThread().sleep(1);
-                    msg = reader.readLine();//get the message
-
-                    if (!msg.equals(null)) {//while there are messages from the client
-                        //System.out.println("u got smth: "+msg);
-                        for (Game g : games) {//loop through all games to find the one that matches the client's
-                            if (gameName.equalsIgnoreCase(g.getGameName())) {
-                                g.addMessage(msg);//add the message to the proper game's queue
-                                //System.out.println("message added: "+msg);
-                                //System.out.println("queue is empty: "+g.getQueue().isEmpty());
                             }
                         }
                     }
-                }
-            }catch(Exception e){//woohoo i love catching exceptions
-                int index=-1;//this block lets the server disconnect the client/remove them from the client list
 
-                for(ClientThread c: clients){//find user in list
-                    if(c.getSocket().equals(socket)){
-                        index=clients.indexOf(c);
+                } catch (Exception e) {//mmm exceptions
+                    e.printStackTrace();
+                }
+
+                /**COPY THE ENTIRE TRY/CATCH BLOCK**/
+                //handles all messages within the game
+                //receives messages from client, puts them in the proper game queue to be dealt with by the game thread
+                try {
+                    while (playing) {
+                        currentThread().sleep(1);
+                        msg = reader.readLine();//get the message
+
+                        if (!msg.equals(null)) {//while there are messages from the client
+                            //System.out.println("u got smth: "+msg);
+                            for (Game g : games) {//loop through all games to find the one that matches the client's
+                                if (gameName.equalsIgnoreCase(g.getGameName())) {
+                                    g.addMessage(msg);//add the message to the proper game's queue
+                                    //System.out.println("message added: "+msg);
+                                    //System.out.println("queue is empty: "+g.getQueue().isEmpty());
+                                    if(msg.contains("/exit/")){
+                                        playing=false;
+                                    }
+                                }
+                            }
+                        }
                     }
-                }
-                System.out.println("user disconnected: "+clients.get(index).getUsername());
-                clients.remove(index);//remove them
+                } catch (Exception e) {//woohoo i love catching exceptions
+                    int index = -1;//this block lets the server disconnect the client/remove them from the client list
 
-                e.printStackTrace();
+                    for (ClientThread c : clients) {//find user in list
+                        if (c.getSocket().equals(socket)) {
+                            index = clients.indexOf(c);
+                        }
+                    }
+                    System.out.println("user disconnected: " + clients.get(index).getUsername());
+                    clients.remove(index);//remove them
+
+                    e.printStackTrace();
+                }
             }
         }
     }
@@ -412,6 +417,17 @@ class Server{
             return s;
         }
 
+        //playerToString
+        //COPY THIS METHOD
+        public String playerToString(ArrayList<ClientThread> c){
+            String s="";
+            for(ClientThread k: c){
+                s+=k.getUsername()+"("+k.getPoints()+")+";
+            }
+
+            return s;
+        }
+
         //yeah just copy the entire run method
         //run
         //handles basically everything
@@ -450,7 +466,6 @@ class Server{
                             }
                             state = 1;//change state to 1
                         }
-                        /**COPY THIS ENTIRE BLOCK, i changed it**/
                         else if (msg.contains("/ready/")) {//if player is ready, start next phase of game
                             System.out.println("a player is ready to proceed. state: "+state);//debug
 
@@ -467,7 +482,7 @@ class Server{
                                             }
                                             c.removeCard(c.getHand().get(index));//remove card from player's hand
                                             c.getWriter().println("/your hand/"+handToString(c.getHand()));//send player new hand
-                                        }/**COPY ELSE IF**/
+                                        }
                                         else if(state==3 && c.getCzar() && msg.lastIndexOf("/") != msg.length()-1){//set everyone to ready if the czar has picked a winner, and store winning card
                                             for(int i=0;i<selectedCards.size();i++) {
                                                 if(Integer.valueOf(msg.substring(msg.indexOf("/card/")+6))==selectedCards.get(i).getID()) {
@@ -500,6 +515,11 @@ class Server{
                             if (allReady) {//if everyone is ready to move on
                                 allReady=false;//reset the variable for the next round
                                 System.out.println("all players are go, state: "+state);
+
+                                //COPY THIS FOR LOOP
+                                for(ClientThread c: players){
+                                    c.getWriter().println("/scores/"+playerToString(players));
+                                }
 
                                 if (state == 1) {//begin round -- pick czar and prompt, give everyone cards, and wait for players to select
                                     for(ClientThread c: players){//depose previous czar a la nicholas ii
@@ -544,7 +564,6 @@ class Server{
                                     state=2;//change state to 2
 
                                 }
-                                /**COPY ELSE IF BLOCK**/
                                 else if (state == 2) {//players have all selected their cards -- reveal cards, now wait for czar to pick winner
                                     for(ClientThread c: players){//send all players a list of the selected cards
                                         c.getWriter().println("/selected cards/"+handToString(selectedCards));
@@ -579,6 +598,7 @@ class Server{
                                 allReady=true;
                             }
                         }else if(msg.contains("/exit/")){//remove client from game when they want to leave
+                            System.out.println("user wants to exit");
                             for(int i=0;i<players.size();i++){
                                 if(players.get(i).getUsername().equals(msg.substring(6))){
                                     index=i;
