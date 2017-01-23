@@ -17,16 +17,19 @@ public class Client {
 	private static BufferedReader consoleReader;
 
 	private static String msg = "";
-	private String tempMessage;
+	private static String tempMessage;
 	private static boolean start=false;
 	private String username;
 	private String groupName;
-	private boolean authenticatedName = false;
-	private boolean authenticatedGroup = false;
-	private int gameSelection=0;
+	private static boolean authenticatedName = false;
+	private static boolean authenticatedGroup = false;
+	private static int gameSelection=0;
 	private static boolean creator;//tells if person created game or joined it
-	private static ArrayList<Card>hand;
-
+	static ArrayList<Card>hand;//COPY THIS
+    static ArrayList<Card> selected;//COPY THIS TOO
+    private static boolean proceed = false;
+	private int selectedCard;
+	private static boolean validCard;
 
 
 
@@ -79,162 +82,246 @@ public class Client {
 		ServerConnectionThread(){
 			System.out.println("Login screen open now.");
 			//Username Screen
-			UsernameLogin userLogin = new UsernameLogin();
-			userLogin.startUserScreen();
+			UsernameLogin.startUserScreen();
 			while(!loggedIn) {
-				System.out.println("threadRun2");
 				try {
-					System.out.println("threadRun3");
 					while (reader.ready()){
 						msg=reader.readLine();
-						System.out.println("threadRun4");
-						if(msg.contains("/send username/") || msg.contains("/no go on the nameroo, jer/")){
-							System.out.println("threadRun5");
+						if(msg.contains("/send username/")){
 							while(start==false){	
 							}
-							System.out.println("threadRun6");
 							writer.println("/username check/"+tempMessage);
 						}else if(msg.contains("/g2g/")){//prompt for game name after username passes
-							System.out.println("threadRun7");
-							authenticatedName=true;
+							setAuthenticateUsername();
+							proceed=true;
 							loggedIn=true;
+						}else if(msg.contains("/no go on the nameroo, jer/")){
+							proceed=true;
+							while(start==false){	
+							}
+							writer.println("/username check/"+tempMessage);
 						}
 						start=false;
 					}
 				} catch (Exception e) {
 					e.printStackTrace();
+					System.out.println(e);
 				}
 			}
 		}
 
 		//runs the client side of every game
 		public synchronized void run(){
-			boolean validCard;
-
 			try {
 				while(!playing){//while the user is not in any game, prompt to join or create one
-					GroupLogin.startGroupScreen();
 					while(reader.ready()){
 						msg=reader.readLine();
 						System.out.println("/msg/"+msg);
-
-
-						if(msg.contains("/send game name/") || msg.contains("/game name invalid/")){//if prompted to send game name
-							if(msg.contains("/game name invalid/")){
-								System.out.println("that name is invalid. try again.");//tell the user what was wrong with their previous game name attempt
+						if(msg.contains("/send game name/")){//if prompted to send game name
+							//wait for player to hit button
+							while(!start){
 							}
-
-							while(start==false){	
-							}
-							if(gameSelection==1){
+							//receive if new or joined game
+							if(getGameSelection()==1) {//if user starts a new game, prompt for name and send with "/new game/"
 								writer.println("/new game/game name check/" + tempMessage);//send the proposed game name to the server
-
-							}else if(gameSelection==2){
+							}else{//if user joins a game, prompt for name and send with "/join game/"
 								writer.println("/join game/game name check/"+ tempMessage);
 							}
-
+						}else if (msg.contains("/game name invalid/")){
+							proceed=true; //run as invalid
+							//wait for player to hit button
+							while(!start){
+							}
+							//receive if new or joined game
+							if(getGameSelection()==1) {//if user starts a new game, prompt for name and send with "/new game/"
+								writer.println("/new game/game name check/" + tempMessage);//send the proposed game name to the server
+							}else{//if user joins a game, prompt for name and send with "/join game/"
+								writer.println("/join game/game name check/"+ tempMessage);
+							}
 						}else if(msg.contains("/game name okay/")){//if user is able to join game/create a new one
+							setAuthenticateGroupName();
+							System.out.println("C"+getAuthenticateGroupName());
+							proceed=true;
+						}else if(msg.contains("/new/")){
+							creator=true;
+							while(!start){
+							}
+							writer.println("/start game/");//tells server to start the game, u can replace this with a start button and only have it show if the player created the game
 							playing=true;//allow user to move on
-							authenticatedGroup=true;
-							if(msg.contains("/new/")){
-								creator=true;
-							}
-						}
-						start=false;
-						playing = true;
-						if (playing){
-							GameScreen.startGameScreen();
-
-						}
-					}
-					writer.println("/start game/");//tells server to start the game, u can replace this with a start button and only have it show if the player created the game
-
-
-					if(msg.contains("/your hand/")) {//if receiving hand of cards, print them all out
-						/*msg = msg.substring(msg.lastIndexOf("/") + 1);//remove the "/your hand/" part of the message
-
-						hand.clear();//empty the current hand, replace with new hand
-						while (msg.length() > 1) {//display cards
-							hand.add(new Card(msg.substring(0,msg.indexOf("(")), Integer.valueOf(msg.substring(msg.indexOf("(")+1, msg.indexOf(")")))));
-							msg = msg.substring(msg.indexOf("+") + 1);//remove first card from string
-						}
-						for(Card c: hand){//display cards with card numbers
-							System.out.println("CARD "+c.getID()+": "+c.getText());
 						}
 
-						writer.println("/ready/"+username);//tell server to go to next stage
-						System.out.println("player is ready. message sent.");
-					} else if(msg.contains("/pick card/")){
-						System.out.println("select the number of the card you want: ");
-						text=input.nextLine();//get player's card
-
-						for(Card c: hand){//see if player's selected card matches any of the ones in their hand
-							if(Integer.valueOf(text)==c.getID()){
-								validCard=true;
-							}
-						}
-						while(!validCard){//error checking
-							System.out.println("invalid number. try again: ");
-							text=input.nextLine();//get player's card
-
-							for(Card c: hand){//see if player's selected card matches any of the ones in their hand
-								if(Integer.valueOf(text)==c.getID()){
-									validCard=true;
-								}
-							}
-						}
-						writer.println("/ready/card/"+text);//tell the server which card the player picked
-						 */
-					} else{
-						System.out.println(msg);
 					}
 				}
 
+				while(playing) {//game loop basically
+					if (reader.ready()) {//if server sent a message
+						msg = reader.readLine();
+						validCard = false;
 
+						if (msg.contains("/your hand/")) {//if receiving hand of cards, print them all out
+							msg = msg.substring(msg.lastIndexOf("/") + 1);//remove the "/your hand/" part of the message
+
+							hand.clear();//empty the current hand, replace with new hand
+							while (msg.length() > 1) {//display cards
+								hand.add(new Card(msg.substring(0, msg.indexOf("(")), Integer.valueOf(msg.substring(msg.indexOf("(") + 1, msg.indexOf(")")))));
+								msg = msg.substring(msg.indexOf("+") + 1);//remove first card from string
+							}
+						}
+						else if(msg.contains("/selected cards/")){//display the selected cards
+							msg=msg.substring(msg.lastIndexOf("/")+1);
+							selected.clear();//empty the current hand, replace with new hand
+							while (msg.length() > 1) {//display cards
+								selected.add(new Card(msg.substring(0, msg.indexOf("(")), Integer.valueOf(msg.substring(msg.indexOf("(") + 1, msg.indexOf(")")))));
+								msg = msg.substring(msg.indexOf("+") + 1);//remove first card from string
+							}
+							System.out.println("CONTENDERS: ");//tell players that the following cards are the ones they picked
+							for (Card c : selected) {//display cards with card numbers
+								System.out.println("CARD " + c.getID() + ": " + c.getText());
+							}
+						}
+						else if (msg.contains("/pick card/")) {//if player is prompted to pick a card
+							for (Card c : hand) {//see if player's selected card matches any of the ones in their hand
+								if (Integer.valueOf(selectedCard) == c.getID()) {
+									validCard = true;
+								}
+							}
+							while (!validCard) {//error checking
+								System.out.println("invalid number. try again: ");
+								for (Card c : hand) {//see if player's selected card matches any of the ones in their hand
+									if (Integer.valueOf(selectedCard) == c.getID()) {
+										validCard = true;
+									}
+								}
+							}
+							writer.println("/ready/" + username + "/card/" + selectedCard);//tell the server which card the player picked
+
+						}
+						/**COPY SINGLE ELSE IF**/
+						else if(msg.contains("/pick winner/")){
+							for (Card c : selected) {//see if player's selected card matches any of the ones in the selected array
+								if (Integer.valueOf(selectedCard) == c.getID()) {
+									validCard = true;
+								}
+							}
+							while (!validCard) {//error checking
+								System.out.println("invalid number. try again: ");
+								for (Card c : selected) {//see if player's selected card matches any of the ones in their hand
+									if (Integer.valueOf(selectedCard) == c.getID()) {
+										validCard = true;
+									}
+								}
+							}
+							writer.println("/ready/" + username + "/card/" + selectedCard);//tell the server which card the player picked
+
+						} else if (msg.contains("/you are czar/")){ //send ready message right away if player is czar -- they don't need to pick an adjective card
+							System.out.println("you are the czar. waiting for players to send in selections");
+							writer.println("/ready/"+username);
+						}
+						/**COPY ELSE IFS**/
+						else if(msg.contains("/winner/")){//if the winner has been picked and server is waiting to start next round
+							if(msg.contains("/card/")) {
+								System.out.println("WINNER: " + msg.substring(8, msg.indexOf("/card/")));
+								System.out.println("CARD: " + msg.substring(msg.indexOf("/card/") + 1));
+								System.out.print("enter anything to start the next round: ");
+								//text = input.nextLine();
+								writer.println("/ready/" + username);
+							}else{//if the game is over
+
+							}
+						}else if(msg.contains("/confirm start/")){
+							writer.println("/ready/"+username+"/card/");
+						} else if(msg.contains("/game over/")){
+							System.out.println("GAME OVER! WINNER: "+msg.substring(11));//tell player game is over
+							System.out.print("enter anything to exit the game: ");
+							//text=input.nextLine();
+							writer.println("/exit/"+username);//tell server user has disconnected
+							playing=false;
+						} else{
+							System.out.println(msg);
+						}
+					}
+				}
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
 		}
 	}
 
-	public synchronized void startGame(){
+	public void startGame(){
 		writer.println("/start game/");
 	}
 
-	public synchronized boolean getAuthenticateUsername(){
-		return authenticatedName;
-	}
-
-	public synchronized boolean getAuthenticateGroupName(){
-		return authenticatedGroup;
-	}
-
-	public synchronized void setTempMessage(String tempMessage){
-		this.tempMessage=tempMessage;
-	}
-
-	public synchronized void setUsername(String username){
-		this.username=username;
-	}
-
-	public synchronized void setGroupName(String groupName){
-		this.groupName=groupName;
-	}
-
-	public synchronized void startRun(){
+	public void startRun(){
 		start=true;
 	}
 
-	public synchronized void setGameSelection(int gameSelection){
-		this.gameSelection=gameSelection;
+	public void stopRun(){
+		proceed=false;
 	}
 
-	public synchronized String getUsername(){
+	public boolean getRun(){
+		return proceed;
+	}
+
+	public void setAuthenticateUsername(){
+		authenticatedName=true;
+	}
+
+	public void setAuthenticateGroupName(){
+		authenticatedGroup=true;
+	}
+
+	public boolean getAuthenticateUsername(){
+		return authenticatedName;
+	}
+
+	public boolean getAuthenticateGroupName(){
+		return authenticatedGroup;
+	}
+
+	public void setTempMessage(String tempMessage){
+		this.tempMessage=tempMessage;
+	}
+
+	public void setUsername(String username){
+		this.username=username;
+	}
+
+	public void setGroupName(String groupName){
+		this.groupName=groupName;
+	}
+
+
+	public void setGameSelection(int x){
+		gameSelection=x;
+	}
+
+	public int getGameSelection(){
+		return gameSelection;
+	}
+
+	public String getUsername(){
 		return username;
 	}
 
 	public synchronized String getGroupName(){
 		return groupName;
+	}
+
+	public boolean isCreator(){
+		return creator;
+	}
+
+	public void openHelpScreen(){
+		HelpScreen.startHelpScreen();
+	}
+
+	public void setSelectedCard(int x){
+		selectedCard=x;
+	}
+	
+	public int getSelectedCard(){
+		return selectedCard;
 	}
 
 }
