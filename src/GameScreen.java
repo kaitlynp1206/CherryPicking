@@ -14,6 +14,7 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowListener;
+import java.util.ArrayList;
 import java.awt.event.ActionEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
@@ -29,10 +30,12 @@ public class GameScreen extends Client {
 	public static JFrame frmCherryPicking;
 	public static JFrame helpFrame;
 	static DefaultListModel<String> defaultList = new DefaultListModel<>();
-	private static boolean active = true;
 	static String msg;
-	private static int cardSelected=-1;
 	static boolean gameActivated = false;
+	static JTextArea handCards[] = new JTextArea[6];
+	private static ArrayList<Card> currentHand = new ArrayList<Card>();
+	private boolean selected = false;
+	
 	
 
 	private static WindowListener windowListener = new WindowAdapter() {
@@ -104,7 +107,7 @@ public class GameScreen extends Client {
 		scoresLabel.setForeground(Color.WHITE);
 		scoresLabel.setFont(displayFont);
 
-		JList scoresList = new JList();
+		JList<String> scoresList = new JList<String>();
 		scoresList.setBounds(10, 104, 160, 128);
 		scoresList.setLayoutOrientation(JList.VERTICAL_WRAP);
 		scoresList.setVisibleRowCount(-1);
@@ -120,7 +123,7 @@ public class GameScreen extends Client {
 		displayPanel.add(chatDisplayPanel);
 		chatDisplayPanel.setLayout(new BorderLayout(0, 0));
 
-		JTextArea chatDisplay = new JTextArea();
+		JTextArea chatDisplay = new JTextArea(); //messages of group are shown
 		chatDisplayPanel.add(new JScrollPane(chatDisplay), BorderLayout.CENTER);
 		chatDisplay.setText("");
 		chatDisplay.setLineWrap(true);
@@ -128,12 +131,12 @@ public class GameScreen extends Client {
 		chatDisplay.setEditable(false);
 		chatDisplay.setBackground(Color.WHITE);
 
-		JPanel chatMessagePanel = new JPanel();
+		JPanel chatMessagePanel = new JPanel(); 
 		chatMessagePanel.setBounds(10, 406, 113, 44);
 		displayPanel.add(chatMessagePanel);
 		chatMessagePanel.setLayout(new BorderLayout(0, 0));
 
-		JTextArea chatMessage = new JTextArea();
+		JTextArea chatMessage = new JTextArea(); //type new message
 		chatMessagePanel.add(new JScrollPane(chatMessage), BorderLayout.CENTER);
 		chatMessage.setText("");
 		chatMessage.setLineWrap(true);
@@ -151,7 +154,7 @@ public class GameScreen extends Client {
 		displayPanel.add(scoresList);
 		displayPanel.add(sendButton);
 
-		sendButton.addActionListener(new ActionListener(){
+		sendButton.addActionListener(new ActionListener(){ //send message to group chat
 			public void actionPerformed(ActionEvent e){
 				msg = chatMessage.getText().trim();
 				if (msg!=""){
@@ -169,8 +172,7 @@ public class GameScreen extends Client {
 		frmCherryPicking.getContentPane().add(cardsPanel);
 		cardsPanel.setLayout(null);
 
-		JTextArea handCards[] = new JTextArea[6];
-		for (int i=0; i<6; i++){
+		for (int i=0; i<hand.size(); i++){
 			handCards[i] = new JTextArea();
 			handCards[i].setLineWrap(true);
 			handCards[i].setBounds(10 + 99*i, 11, 89, 100);
@@ -178,6 +180,7 @@ public class GameScreen extends Client {
 			handCards[i].setLineWrap(true);
 			handCards[i].setWrapStyleWord(true);
 			handCards[i].setFont(cardFont);
+			handCards[i].setText(hand.get(i).getText());
 			cardsPanel.add(handCards[i]);
 
 		}
@@ -189,12 +192,14 @@ public class GameScreen extends Client {
 								handCards[i].setBackground(Color.WHITE);
 							}
 							cards.setBackground(Color.RED);
+							selected=true;
 							System.out.println(cards.getBackground());
 						}
 					});
 		}
+		
 
-		JPanel selectPanel = new JPanel();
+		JPanel selectPanel = new JPanel(); //panel contains help and select card buttons
 		selectPanel.setBackground(Color.LIGHT_GRAY);
 		selectPanel.setBounds(179, 418, 607, 43);
 		frmCherryPicking.getContentPane().add(selectPanel);
@@ -203,17 +208,19 @@ public class GameScreen extends Client {
 		selectCardButton.setBounds(205, 11, 196, 21);
 		selectCardButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				for (int i=0; i<6; i++){
-					//check for selected card
-					if (handCards[i].getBackground()==Color.RED){
-						cardSelected=i;
-					}else{//card not selected
-						cardSelected=-1;
+				if (selected){
+					for (int i=0; i<6; i++){
+						//check for selected card
+						if (handCards[i].getBackground()==Color.RED){
+							setSelectedCard(currentHand.get(i).getID());
+						}
+						startRun();
 					}
+				}else{
+					setSelectedCard(-1);
 				}
-
-				if (cardSelected!=-1){
-					//Client.message="/cardSelected/";//+hand number
+				for (int i=0; i<6; i++){
+					handCards[i].setBackground(Color.WHITE);
 				}
 			}
 		});
@@ -225,8 +232,7 @@ public class GameScreen extends Client {
 		selectPanel.add(helpButton);
 		helpButton.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent e){
-				HelpScreen helpScreen = new HelpScreen();
-		        helpScreen.startHelpScreen();
+				openHelpScreen();
 			}
 		});
 
@@ -251,7 +257,7 @@ public class GameScreen extends Client {
 		usernameLabel.setBounds(10, 11, 185, 20);
 		personalPanel.add(usernameLabel);
 
-		if (GroupLogin.gameMaker==true){
+		if (isCreator()){
 			JButton startGameButton = new JButton("Start Game");
 			startGameButton.setBounds(375, 11, 106, 23);
 			startGameButton.addActionListener(new ActionListener(){
@@ -259,6 +265,7 @@ public class GameScreen extends Client {
 					if (Game.numPlayers>3){
 						System.out.println("Starting Game");
 						gameActivated = true;
+						startRun();
 					}
 				}
 			});
@@ -311,10 +318,6 @@ public class GameScreen extends Client {
 
 	public static void exit(){
 		frmCherryPicking.dispose();
-		active=false;
 	}
 
-	public synchronized boolean getStatus(){
-		return active;
-	}
 }
