@@ -18,17 +18,17 @@ public class Client {
 
 	private static String msg = "";
 	private static String tempMessage;
-	private static boolean start=false;
-	private String username;
-	private String groupName;
+	static boolean start;
+	private static String username;
+	private static String groupName;
 	private static boolean authenticatedName = false;
 	private static boolean authenticatedGroup = false;
 	private static int gameSelection=0;
 	private static boolean creator;//tells if person created game or joined it
 	static ArrayList<Card>hand;//COPY THIS
-    static ArrayList<Card> selected;//COPY THIS TOO
-    private static boolean proceed = false;
-	private int selectedCard;
+	static ArrayList<Card> selected;//COPY THIS TOO
+	private static boolean proceed = false;
+	private static int selectedCard;
 	private static boolean validCard;
 
 
@@ -38,8 +38,6 @@ public class Client {
 	}
 
 	public void go(){
-		String msg="";
-
 		try {
 			//declare stuff so no null pointer exceptions
 			creator=false;
@@ -81,6 +79,7 @@ public class Client {
 		//constructor
 		ServerConnectionThread(){
 			System.out.println("Login screen open now.");
+			start=false;
 			//Username Screen
 			UsernameLogin.startUserScreen();
 			while(!loggedIn) {
@@ -142,22 +141,30 @@ public class Client {
 							setAuthenticateGroupName();
 							System.out.println("C"+getAuthenticateGroupName());
 							proceed=true;
-						}else if(msg.contains("/new/")){
-							creator=true;
-							while(!start){
+							start=false;
+							if(msg.contains("/new/")){
+								System.out.println("Check");
+								creator=true;
+								System.out.println("y"+start);
+								while(!start){
+									System.out.println(start+" GEL");
+								}
+								System.out.println("x"+start);
+								writer.println("/start game/");//tells server to start the game, u can replace this with a start button and only have it show if the player created the game
+								playing=true;//allow user to move on
+								System.out.println(playing);
 							}
-							writer.println("/start game/");//tells server to start the game, u can replace this with a start button and only have it show if the player created the game
-							playing=true;//allow user to move on
 						}
 
 					}
 				}
 
 				while(playing) {//game loop basically
+					System.out.println("IM HERE");
 					if (reader.ready()) {//if server sent a message
 						msg = reader.readLine();
 						validCard = false;
-
+						System.out.println("C "+msg);
 						if (msg.contains("/your hand/")) {//if receiving hand of cards, print them all out
 							msg = msg.substring(msg.lastIndexOf("/") + 1);//remove the "/your hand/" part of the message
 
@@ -166,6 +173,8 @@ public class Client {
 								hand.add(new Card(msg.substring(0, msg.indexOf("(")), Integer.valueOf(msg.substring(msg.indexOf("(") + 1, msg.indexOf(")")))));
 								msg = msg.substring(msg.indexOf("+") + 1);//remove first card from string
 							}
+							System.out.println(hand.size());
+							GameScreen.refreshCards();
 						}
 						else if(msg.contains("/selected cards/")){//display the selected cards
 							msg=msg.substring(msg.lastIndexOf("/")+1);
@@ -319,9 +328,13 @@ public class Client {
 	public void setSelectedCard(int x){
 		selectedCard=x;
 	}
-	
+
 	public int getSelectedCard(){
 		return selectedCard;
+	}
+	
+	public void setMsg(String message){
+		msg=message;
 	}
 
 }
