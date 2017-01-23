@@ -48,9 +48,10 @@ public class HelpScreen {
 		JTextArea txtrInstructions = new JTextArea();
 		txtrInstructions.setLineWrap(true);
 		txtrInstructions.setWrapStyleWord(true);
-		txtrInstructions.setText("Instructions:\r\nFor groups of 3-8. Users are each given 6 white cards containing nouns on them. For each round, the user must select a white card that they feel is best suited to the black card displayed. The czar within the group will select the winner of the round. First player to reach 10 points wins. ");
+		txtrInstructions.setText("Instructions:\r\nFor groups of 3-8. Users are each given 6 white cards containing nouns on them. For each round, the user must select a white card that they feel is best suited to the black card displayed. The czar within the group will select the winner of the round. First player to reach 10 points wins. Once game has started, no additional players will be able to enter the game. ");
 		txtrInstructions.setBackground(Color.LIGHT_GRAY);
 		txtrInstructions.setBounds(20, 95, 393, 143);
+		txtrInstructions.setEditable(false);
 		helpFrame.getContentPane().add(txtrInstructions);
 
 		helpFrame.setBounds(100, 100, 450, 300);
