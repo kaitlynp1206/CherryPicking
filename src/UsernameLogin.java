@@ -26,7 +26,6 @@ public class UsernameLogin extends Client {
 	private static String username = "";
 	private static boolean authenticated = false;
 	private JLabel errorLabel;
-	private static boolean active = true;
 	
 	private static WindowListener windowListener = new WindowAdapter() {
         @Override
@@ -57,6 +56,7 @@ public class UsernameLogin extends Client {
 		usernameFrame = new JFrame();
 		usernameFrame.getContentPane().setBackground(Color.GRAY);
 		usernameFrame.getContentPane().setLayout(null);
+		usernameFrame.setResizable(false);
 		
 		JLabel titleLabel = new JLabel("Cherry Picking!");
 		titleLabel.setBounds(57, 145, 270, 73);
@@ -86,6 +86,12 @@ public class UsernameLogin extends Client {
 		
 		usernameFrame.getContentPane().add(imageCherry);
 		
+		errorLabel = new JLabel("");
+		errorLabel.setForeground(Color.RED);
+		errorLabel.setBounds(96, 304, 278, 28);
+		errorLabel.setFont(new Font("Tahoma", Font.PLAIN, 11));
+		usernameFrame.getContentPane().add(errorLabel);
+		
 		
 		usernameFrame.setBounds(100, 100, 400, 400);
 		usernameFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -95,8 +101,10 @@ public class UsernameLogin extends Client {
 				username = usernameLabel.getText().trim();
 				setTempMessage(username);
 				startRun();
+				while(!getRun()){ //allow for client to get to if statement after try&catch
+				}
 				try {
-					if ((!authenticated) && (getAuthenticateUsername())) {
+					if (getAuthenticateUsername()) {
 						setUsername(username);;
 						authenticated = true;
 						System.out.println("Success");
@@ -108,29 +116,20 @@ public class UsernameLogin extends Client {
 					System.out.println("Good jub");
 					close();
 				} else {
-					// Error label
-					errorLabel = new JLabel("Error: Username has already been taken");
-					errorLabel.setForeground(Color.RED);
-					errorLabel.setBounds(96, 305, 195, 14);
-					usernameFrame.getContentPane().add(errorLabel);
+					errorLabel.setText("Error: Username has already been taken");
                 }
+				stopRun();
 			}
 		});
 	
 	}
 	
-	public synchronized boolean getStatus(){
-		return active;
-	}
-	
 	public static void exit(){
 		usernameFrame.dispose();
-		active=false;
 	}
 	
-	public void close() {
+	public static void close() {
 		usernameFrame.dispose();
-		active=false;
-		
+		GroupLogin.startGroupScreen();
 	}
 }
