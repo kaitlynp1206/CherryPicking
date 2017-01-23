@@ -239,6 +239,7 @@ public class Client {
                                 System.out.print("enter anything to exit the game: ");
                                 text = input.nextLine();
                                 writer.println("/exit/" + username);//tell server user has disconnected
+                                System.out.println("a raven has been dispatched");
                                 playing = false;
                             }
                             else if(msg.contains("/chat/")){

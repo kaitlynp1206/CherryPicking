@@ -19,6 +19,7 @@ class Server{
      */
     public void go(){
         Socket clientSocket;
+        int index=-1;
 
         //COPY TRY CATCH
         try{
@@ -34,6 +35,15 @@ class Server{
                 clients.add(t);//add thread to array
                 t.start(); //start the frickin thing
 
+                for(Game g: games){//check games for any empty ones
+                    if(g.noPlayers()) {
+                        index = games.indexOf(g);
+                    }
+                }
+                if(index!=-1){//remove the game from the list
+                    games.remove(index);
+                    index=-1;
+                }
             }
         }catch(IOException e){
             System.out.println(e);
@@ -73,6 +83,9 @@ class Server{
         }
         public String getGameName(){
             return gameName;
+        }
+        public void setPoints(int p){
+            awesomePoints=p;
         }
         public int getPoints(){
             return awesomePoints;
@@ -201,7 +214,7 @@ class Server{
 
                             if (msg.contains("/game name check/")) { //format this line will be in: "/new game/game name check/gameName here" or "/join game/game name check/gameName here"
                                 for (Game g : games) {//check it against all existing group names
-                                    //System.out.println("game name: "+g.getGameName());
+                                    System.out.println("game name: "+g.getGameName());
                                     if (msg.substring(msg.indexOf("/game name check/") + 17).equalsIgnoreCase(g.getGameName())) {
                                         numHappenings++;
                                     }
@@ -216,6 +229,7 @@ class Server{
                                             Game g = new Game(gameName, c);//create a new game thread with name and add client
                                             games.add(g);//add game to list
                                             g.start();
+                                            System.out.println("new game started: "+gameName);
                                             writer.println("/game name okay/new/");//tell client that name is good
 
                                             g.addMessage("/new player/" + c.getUsername());
@@ -317,6 +331,7 @@ class Server{
         private boolean allReady;
         private boolean gameOver;
         public static final int HAND_SIZE=6;//COPY THIS ITS IMPORTANT
+        private volatile boolean finished=false;
         //COPY THESE VARIABLES, i moved them from the run method to here
         String msg;
         int randomNum=0;
@@ -355,8 +370,25 @@ class Server{
             selectedCards=new ArrayList<Card>();
             allReady=true;
             gameOver=false;
+
+            for(ClientThread k: players){//reset the number of points each player has
+                k.setPoints(0);
+            }
         }
 
+        //tells if the game is empty or not
+        public boolean noPlayers(){
+            if(players.size()==0){
+                return true;
+            }else{
+                return false;
+            }
+        }
+
+        //stops the thread hopefully
+        public void stopThread(){
+            finished=true;
+        }
         /**COPY THE METHOD, i changed it**/
         //gets cards from file, returns a deck of cards
         public synchronized ArrayList<Card> getDeck() throws Exception {
@@ -436,183 +468,181 @@ class Server{
         //handles basically everything
         public synchronized void run(){
             try{
-                while(state!=4) {
+                while(!finished) {
+                    while (state != 4) {
+                        for (ClientThread c : players) {
+                            if (c.getPoints() >= 1) {
+                                state = 4;
+                                winner = c.getUsername();
+                                System.out.println("game winner: " + winner);
+                                for (ClientThread k : players) {
+                                    k.getWriter().println("/game over/" + winner);
+                                    System.out.println("message sent: game over");
+                                }
 
-                    for(ClientThread c: players){
-                        if(c.getPoints()>=1){
-                            state=4;
-                            winner=c.getUsername();
-                            System.out.println("game winner: "+winner);
+                            }
                         }
-                    }
 
-                    currentThread().sleep(1);
-                    if (!queue.isEmpty()) {
-                        msg = queue.dequeue();
-                        System.out.println("u got mail: "+msg);
-                        if (msg.contains("/chat/")) { //send message to all players if player enters stuff into the game chat
-                            for (ClientThread c : players) {
-                                c.getWriter().println(msg);
-                            }
-                        } else if (msg.contains("/new player/")) {//send a "[PLAYER NAME] JOINED GAME!" message to all players
-                            for (ClientThread c : players) {
-                                c.getWriter().println(msg.substring(msg.indexOf("/new player/") + 12) + " joined the game.");
-                                System.out.println("new player joined game");
-                            }
-                        } else if (msg.contains("/start game/")) {//if person who created game starts the game
-                            System.out.println("YAAAS game started");
-                            deck=getDeck();//get deck from file
-                            System.out.println("OOOOOH deck exists");
-                            for (ClientThread c : players) {//go through every player
-                                c.getWriter().println("/confirm start/");
-                            }
-                            state = 1;//change state to 1
-                        }
-                        else if (msg.contains("/ready/")) {//if player is ready, start next phase of game
-                            System.out.println("a player is ready to proceed. state: "+state);//debug
+                        currentThread().sleep(1);
+                        if (!queue.isEmpty()) {
+                            msg = queue.dequeue();
+                            System.out.println("u got mail: " + msg);
+                            if (msg.contains("/chat/")) { //send message to all players if player enters stuff into the game chat
+                                for (ClientThread c : players) {
+                                    c.getWriter().println(msg);
+                                }
+                            } else if (msg.contains("/new player/")) {//send a "[PLAYER NAME] JOINED GAME!" message to all players
+                                for (ClientThread c : players) {
+                                    c.getWriter().println(msg.substring(msg.indexOf("/new player/") + 12) + " joined the game.");
+                                    System.out.println("new player joined game");
+                                }
+                            } else if (msg.contains("/start game/")) {//if person who created game starts the game
+                                System.out.println("YAAAS game started");
+                                deck = getDeck();//get deck from file
+                                System.out.println("OOOOOH deck exists");
+                                for (ClientThread c : players) {//go through every player
+                                    c.getWriter().println("/confirm start/");
+                                }
+                                state = 1;//change state to 1
+                            } else if (msg.contains("/ready/")) {//if player is ready, start next phase of game
+                                System.out.println("a player is ready to proceed. state: " + state);//debug
 
-                            for (ClientThread c : players) {//find client in list, change status to ready
-                                if(msg.contains("/card/")){//format: "/ready/name/card/" if starting game, "/ready/name/card/text"
-                                    if(msg.substring(7, msg.indexOf("/card/")).equalsIgnoreCase(c.getUsername())){
-                                        if(state==2 && !c.getCzar() && msg.lastIndexOf("/") != msg.length()-1){//if waiting for players to select cards, and server receives a card selection
-                                            for(Card k: c.getHand()) {//find the card the player selected in their hand
-                                                if(k.getID()==Integer.valueOf(msg.substring(msg.indexOf("/card/")+6))) {
-                                                    selectedCards.add(k);//add card to list of selected cards that czar can pick from
-                                                    System.out.println("card added to selected: " + k.getID());
-                                                    index = c.getHand().indexOf(k);
+                                for (ClientThread c : players) {//find client in list, change status to ready
+                                    if (msg.contains("/card/")) {//format: "/ready/name/card/" if starting game, "/ready/name/card/text"
+                                        if (msg.substring(7, msg.indexOf("/card/")).equalsIgnoreCase(c.getUsername())) {
+                                            if (state == 2 && !c.getCzar() && msg.lastIndexOf("/") != msg.length() - 1) {//if waiting for players to select cards, and server receives a card selection
+                                                for (Card k : c.getHand()) {//find the card the player selected in their hand
+                                                    if (k.getID() == Integer.valueOf(msg.substring(msg.indexOf("/card/") + 6))) {
+                                                        selectedCards.add(k);//add card to list of selected cards that czar can pick from
+                                                        System.out.println("card added to selected: " + k.getID());
+                                                        index = c.getHand().indexOf(k);
+                                                    }
                                                 }
-                                            }
-                                            c.removeCard(c.getHand().get(index));//remove card from player's hand
-                                            c.getWriter().println("/your hand/"+handToString(c.getHand()));//send player new hand
-                                        }
-                                        else if(state==3 && c.getCzar() && msg.lastIndexOf("/") != msg.length()-1){//set everyone to ready if the czar has picked a winner, and store winning card
-                                            for(int i=0;i<selectedCards.size();i++) {
-                                                if(Integer.valueOf(msg.substring(msg.indexOf("/card/")+6))==selectedCards.get(i).getID()) {
-                                                    index = i;
+                                                c.removeCard(c.getHand().get(index));//remove card from player's hand
+                                                c.getWriter().println("/your hand/" + handToString(c.getHand()));//send player new hand
+                                            } else if (state == 3 && c.getCzar() && msg.lastIndexOf("/") != msg.length() - 1) {//set everyone to ready if the czar has picked a winner, and store winning card
+                                                for (int i = 0; i < selectedCards.size(); i++) {
+                                                    if (Integer.valueOf(msg.substring(msg.indexOf("/card/") + 6)) == selectedCards.get(i).getID()) {
+                                                        index = i;
+                                                    }
                                                 }
-                                            }
-                                            selected=selectedCards.get(index);
+                                                selected = selectedCards.get(index);
 
-                                            for(ClientThread k: players){//set everyone as ready
-                                                k.setReady(true);
+                                                for (ClientThread k : players) {//set everyone as ready
+                                                    k.setReady(true);
+                                                }
+                                                allReady = true;
                                             }
-                                            allReady=true;
+                                            c.setReady(true);
                                         }
+                                    } else if (msg.substring(7).equals(c.getUsername())) {
                                         c.setReady(true);
                                     }
-                                }else if(msg.substring(7).equals(c.getUsername())){
-                                    c.setReady(true);
-                                }
-                            }
-
-                            //check if all players are ready
-                            for(int i=0;i<players.size() && allReady;i++){
-                                if(players.get(i).getReady()==false){
-                                    allReady=false;
-                                    System.out.println("not ready: "+players.get(i).getUsername());
-                                }
-                            }
-                            System.out.println("everybody ready? "+allReady);
-
-                            if (allReady) {//if everyone is ready to move on
-                                allReady=false;//reset the variable for the next round
-                                System.out.println("all players are go, state: "+state);
-
-                                //COPY THIS FOR LOOP
-                                for(ClientThread c: players){
-                                    c.getWriter().println("/scores/"+playerToString(players));
                                 }
 
-                                if (state == 1) {//begin round -- pick czar and prompt, give everyone cards, and wait for players to select
-                                    for(ClientThread c: players){//depose previous czar a la nicholas ii
-                                        c.setCzar(false);
+                                //check if all players are ready
+                                for (int i = 0; i < players.size() && allReady; i++) {
+                                    if (players.get(i).getReady() == false) {
+                                        allReady = false;
+                                        System.out.println("not ready: " + players.get(i).getUsername());
                                     }
-                                    czarIndex++;//shift czar right one player each round
-                                    if(czarIndex==players.size()){//if reached the end of the list, go back to the first czar
-                                        czarIndex=0;
-                                    }
-                                    players.get(czarIndex).setCzar(true);//put new czar on throne
+                                }
+                                System.out.println("everybody ready? " + allReady);
 
-                                    for(ClientThread c: players) {//give everyone another card if their hand size is <6
-                                        System.out.println("hand size: "+c.getHand().size());
-                                        if(c.getHand().size()<6){
-                                            cardsNeeded=c.getHand().size();
-                                            for(int i=0;i<6-cardsNeeded;i++){
-                                                c.addCard(drawCard(c.getUsername()));
+                                if (allReady) {//if everyone is ready to move on
+                                    allReady = false;//reset the variable for the next round
+                                    System.out.println("all players are go, state: " + state);
+
+                                    //COPY THIS FOR LOOP
+                                    for (ClientThread c : players) {
+                                        c.getWriter().println("/scores/" + playerToString(players));
+                                    }
+
+                                    if (state == 1) {//begin round -- pick czar and prompt, give everyone cards, and wait for players to select
+                                        for (ClientThread c : players) {//depose previous czar a la nicholas ii
+                                            c.setCzar(false);
+                                        }
+                                        czarIndex++;//shift czar right one player each round
+                                        if (czarIndex == players.size()) {//if reached the end of the list, go back to the first czar
+                                            czarIndex = 0;
+                                        }
+                                        players.get(czarIndex).setCzar(true);//put new czar on throne
+
+                                        for (ClientThread c : players) {//give everyone another card if their hand size is <6
+                                            System.out.println("hand size: " + c.getHand().size());
+                                            if (c.getHand().size() < 6) {
+                                                cardsNeeded = c.getHand().size();
+                                                for (int i = 0; i < 6 - cardsNeeded; i++) {
+                                                    c.addCard(drawCard(c.getUsername()));
+                                                }
+                                            }
+                                            c.getWriter().println("/your hand/" + handToString(c.getHand()));//send hand to player
+                                        }
+
+                                        randomNum = (int) (Math.random() * deck.size());//randomly pick a noun card from the deck
+                                        while (deck.get(randomNum).getNoun() == false) {//if an adjective card is selected, try again
+                                            randomNum = (int) (Math.random() * deck.size());
+                                        }
+                                        for (ClientThread c : players) {//show all players what the card is
+                                            c.getWriter().println("/prompt/" + deck.get(randomNum).getText());
+
+                                            if (c.getCzar()) {
+                                                c.getWriter().println("/you are czar/");//prompt czar for ready message
+                                            } else {
+                                                c.getWriter().println("/pick card/");//prompt users for card
                                             }
                                         }
-                                        c.getWriter().println("/your hand/"+handToString(c.getHand()));//send hand to player
-                                    }
 
-                                    randomNum=(int)(Math.random()*deck.size());//randomly pick a noun card from the deck
-                                    while(deck.get(randomNum).getNoun()==false){//if an adjective card is selected, try again
-                                        randomNum = (int)(Math.random()*deck.size());
-                                    }
-                                    for(ClientThread c: players){//show all players what the card is
-                                        c.getWriter().println("/prompt/"+deck.get(randomNum).getText());
+                                        selectedCards.clear();
 
-                                        if(c.getCzar()){
-                                            c.getWriter().println("/you are czar/");//prompt czar for ready message
-                                        }else{
-                                            c.getWriter().println("/pick card/");//prompt users for card
+                                        for (ClientThread c : players) {
+                                            c.setReady(false);
                                         }
+                                        state = 2;//change state to 2
+
+                                    } else if (state == 2) {//players have all selected their cards -- reveal cards, now wait for czar to pick winner
+                                        for (ClientThread c : players) {//send all players a list of the selected cards
+                                            c.getWriter().println("/selected cards/" + handToString(selectedCards));
+                                        }
+
+                                        for (ClientThread c : players) {//find czar
+                                            if (c.getCzar()) {//prompt czar to select card
+                                                c.getWriter().println("/pick winner/");//wait for czar to pick winner
+                                            }
+                                        }
+
+                                        for (ClientThread c : players) {
+                                            c.setReady(false);
+                                        }
+
+                                        state = 3;//change state to 3
+                                    } else if (state == 3) {//czar has chosen winner, reveal winner and wait for everyone to say okay
+                                        for (ClientThread c : players) {//send winner to all players
+                                            c.getWriter().println("/winner/" + selected.getPlayer() + "/card/" + selected.getText());
+                                            if (c.getUsername().equalsIgnoreCase(selected.getPlayer())) {//add 1 point to winner's score
+                                                c.addPoint();
+                                            }
+                                        }
+
+                                        for (ClientThread c : players) {
+                                            c.setReady(false);
+                                        }
+
+                                        state = 1;//change state to 1, start new round
                                     }
-
-                                    selectedCards.clear();
-
-                                    for (ClientThread c : players) {
-                                        c.setReady(false);
-                                    }
-                                    state=2;//change state to 2
-
+                                } else {
+                                    allReady = true;
                                 }
-                                else if (state == 2) {//players have all selected their cards -- reveal cards, now wait for czar to pick winner
-                                    for(ClientThread c: players){//send all players a list of the selected cards
-                                        c.getWriter().println("/selected cards/"+handToString(selectedCards));
-                                    }
-
-                                    for(ClientThread c: players) {//find czar
-                                        if(c.getCzar()) {//prompt czar to select card
-                                            c.getWriter().println("/pick winner/");//wait for czar to pick winner
-                                        }
-                                    }
-
-                                    for (ClientThread c : players) {
-                                        c.setReady(false);
-                                    }
-
-                                    state=3;//change state to 3
-                                } else if (state == 3) {//czar has chosen winner, reveal winner and wait for everyone to say okay
-                                    for(ClientThread c: players) {//send winner to all players
-                                        c.getWriter().println("/winner/"+selected.getPlayer()+"/card/"+selected.getText());
-                                        if(c.getUsername().equalsIgnoreCase(selected.getPlayer())){//add 1 point to winner's score
-                                            c.addPoint();
-                                        }
-                                    }
-
-                                    for (ClientThread c : players) {
-                                        c.setReady(false);
-                                    }
-
-                                    state=1;//change state to 1, start new round
-                                }
-                            }else{
-                                allReady=true;
                             }
                         }
                     }
-                }
 
-                for(ClientThread c: players){
-                    c.getWriter().println("/game over/"+winner);
-                    System.out.println("message sent: game over");
-                }
 
-                while(state==4) {//while game is over, check for exit messages
+                    //while game is over, check for exit messages
                     currentThread().sleep(1);
-                    if(!queue.isEmpty()) {
+                    if (!queue.isEmpty()) {
                         System.out.println("got message");
-                        msg=queue.dequeue();
+                        msg = queue.dequeue();
                         if (msg.contains("/exit/")) {//remove client from game when they want to leave
                             System.out.println("user wants to exit");
                             for (int i = 0; i < players.size(); i++) {
@@ -622,13 +652,21 @@ class Server{
                                 }
                             }
                             players.remove(index);
+                            System.out.println("player removed. size: "+players.size());
+
+                            if(noPlayers()){
+                                stopThread();
+                            }
                         }
                     }
+
                 }
             }catch(Exception e){
                 e.printStackTrace();
             }
-            System.out.println("game thread ended");
-        }
+            System.out.println("thread stopped");
+        }//end run
+
+
     }
 }
