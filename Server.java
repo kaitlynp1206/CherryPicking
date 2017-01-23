@@ -266,8 +266,9 @@ class Server{
                             for (Game g : games) {//loop through all games to find the one that matches the client's
                                 if (gameName.equalsIgnoreCase(g.getGameName())) {
                                     g.addMessage(msg);//add the message to the proper game's queue
-                                    //System.out.println("message added: "+msg);
-                                    //System.out.println("queue is empty: "+g.getQueue().isEmpty());
+
+                                    System.out.println("message added: "+msg);
+                                    System.out.println("queue is empty: "+g.getQueue().isEmpty());
                                     if(msg.contains("/exit/")){
                                         playing=false;
                                     }
@@ -314,6 +315,7 @@ class Server{
         private Queue<String> queue;
         private Card nounCard;
         private boolean allReady;
+        private boolean gameOver;
         public static final int HAND_SIZE=6;//COPY THIS ITS IMPORTANT
         //COPY THESE VARIABLES, i moved them from the run method to here
         String msg;
@@ -352,6 +354,7 @@ class Server{
             deck=new ArrayList<Card>();
             selectedCards=new ArrayList<Card>();
             allReady=true;
+            gameOver=false;
         }
 
         /**COPY THE METHOD, i changed it**/
@@ -432,7 +435,6 @@ class Server{
         //run
         //handles basically everything
         public synchronized void run(){
-
             try{
                 while(state!=4) {
 
@@ -597,11 +599,25 @@ class Server{
                             }else{
                                 allReady=true;
                             }
-                        }else if(msg.contains("/exit/")){//remove client from game when they want to leave
+                        }
+                    }
+                }
+
+                for(ClientThread c: players){
+                    c.getWriter().println("/game over/"+winner);
+                    System.out.println("message sent: game over");
+                }
+
+                while(state==4) {//while game is over, check for exit messages
+                    currentThread().sleep(1);
+                    if(!queue.isEmpty()) {
+                        System.out.println("got message");
+                        msg=queue.dequeue();
+                        if (msg.contains("/exit/")) {//remove client from game when they want to leave
                             System.out.println("user wants to exit");
-                            for(int i=0;i<players.size();i++){
-                                if(players.get(i).getUsername().equals(msg.substring(6))){
-                                    index=i;
+                            for (int i = 0; i < players.size(); i++) {
+                                if (players.get(i).getUsername().equals(msg.substring(6))) {
+                                    index = i;
                                     players.get(i).setPlaying(false);
                                 }
                             }
@@ -612,13 +628,7 @@ class Server{
             }catch(Exception e){
                 e.printStackTrace();
             }
-
-            for(ClientThread c: players){
-                c.getWriter().println("/game over/"+winner);
-                System.out.println("message sent: game over");
-            }
-
-            //System.out.println("game thread ended");
+            System.out.println("game thread ended");
         }
     }
 }
