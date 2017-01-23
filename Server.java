@@ -471,7 +471,7 @@ class Server{
                 while(!finished) {
                     while (state != 4) {
                         for (ClientThread c : players) {
-                            if (c.getPoints() >= 1) {
+                            if (c.getPoints() >= 3) {
                                 state = 4;
                                 winner = c.getUsername();
                                 System.out.println("game winner: " + winner);

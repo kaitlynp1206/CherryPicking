@@ -1,0 +1,550 @@
+﻿/a/a bad haircut
+/a/a broken leg
+/a/a bull fight
+/a/a cabin in the woods
+/a/a can of worms
+/a/a car crash
+/a/a cheap motel
+/a/a cookbook
+/a/a crawl space
+/a/a crown
+/a/a desert
+/a/a dollar
+/a/a dozen red roses
+/a/a fairy
+/a/a few good men
+/a/a flat tire
+/a/a funeral
+/a/a giant
+/a/a haunted house
+/a/a honeymoon
+/a/a king
+/a/a leaky boat
+/a/a locker room
+/a/abraham lincoln
+/a/actors
+/a/actresses
+/a/adam and eve
+/a/adam sandler
+/a/adolf hitler
+/a/africa
+/a/AIDS
+/a/airplanes
+/a/aladdin
+/a/alaska
+/a/alfred nobel
+/a/aliens
+/a/americans
+/a/amputations
+/a/ancient rome
+/a/amsterdam
+/a/andy warhol
+/a/angelina jolie
+/a/angry hornets
+/a/anne frank
+/a/anthrax
+/a/ants
+/a/apple juice
+/a/apple pie
+/a/apples
+/a/aristotle
+/a/armadillo
+/a/arnold schwarzenegger
+/a/atomic bombs
+/a/attack on pearl harbour
+/a/arsenic
+/a/assault and battery
+/a/austin powers
+/a/australia
+/a/babe ruth
+/a/babies
+/a/bacon
+/a/bagels
+/a/ballerinas
+/a/bald eagles
+/a/bananas
+/a/band-aids
+/a/bangkok
+/a/barack obama
+/a/barfing
+/a/barbed wire
+/a/barney
+/a/baseball
+/a/basketball
+/a/batman
+/a/bats
+/a/bb guns
+/a/beachballs
+/a/beanie babies
+/a/beauty and the beast
+/a/bee stings
+/a/beer
+/a/beets
+/a/beats headphones
+/a/ben stiller
+/a/berlin
+/a/bert and ernie
+/a/bigfoot
+/a/big bang theory
+/a/big bird
+/a/birds
+/a/black cats
+/a/blood
+/a/bodies
+/a/body odor
+/a/bolshevik revolution
+/a/bowling
+/a/boxing
+/a/boy scouts
+/a/boys
+/a/braces
+/a/brains
+/a/brad pitt
+/a/breaking and entering
+/a/broadway
+/a/bruce willis
+/a/bruce lee
+/a/bugs bunny
+/a/brushing your teeth
+/a/bunk beds
+/a/cabbage
+/a/canada
+/a/cactus
+/a/canadians
+/a/candy corn
+/a/car crash
+/a/carnivals
+/a/carrots
+/a/casablanca
+/a/casinos
+/a/cats
+/a/caviar
+/a/celine dion
+/a/cell phones
+/a/challenger explosion
+/a/cheese
+/a/chernobyl
+/a/cherries
+/a/chicago
+/a/china
+/a/chips
+/a/choir boys
+/a/chopsticks
+/a/cigarettes
+/a/cinco de mayo
+/a/cinderella
+/a/cleaning the bathroom
+/a/cloned sheep
+/a/cocaine
+/a/coconuts
+/a/coffee
+/a/communists
+/a/communism
+/a/computers
+/a/confucianism
+/a/conspiracy theories
+/a/corpses
+/a/crime and punishment
+/a/crying
+/a/cuba
+/a/cults
+/a/daddy
+/a/dancing
+/a/dandruff
+/a/danny devito
+/a/dark alleys
+/a/darth vader
+/a/death and taxes
+/a/dying
+/a/democrats
+/a/dinosaurs
+/a/divorce
+/a/doctors
+/a/disneyland
+/a/donald trump
+/a/donuts
+/a/driving off a cliff
+/a/drums
+/a/drunk drivers
+/a/drinking
+/a/durian
+/a/ear wax
+/a/email
+/a/eating breakfast
+/a/eddie murphy
+/a/elephants
+/a/electricity
+/a/elevators
+/a/elmo
+/a/elvis
+/a/emu war
+/a/europe
+/a/eyes
+/a/ears
+/a/exorcism
+/a/eugenics
+/a/fairies
+/a/feminists
+/a/festering wounds
+/a/fire
+/a/floods
+/a/football
+/a/freckles
+/a/frogs
+/a/fur
+/a/fuzz
+/a/gangs
+/a/gas
+/a/genetic engineering
+/a/getting shot
+/a/getting a shot
+/a/george washington
+/a/ghosts
+/a/glaciers
+/a/glue
+/a/goats
+/a/gold
+/a/godzilla
+/a/grapes
+/a/grapefruit
+/a/grave robbers
+/a/gymnastics
+/a/hair transplants
+/a/halloween
+/a/ham
+/a/hammer
+/a/hammer and sickle
+/a/hand grenades
+/a/handcuffs
+/a/hands
+/a/hanukkah
+/a/hard boiled eggs
+/a/harrison ford
+/a/harry potter
+/a/harvard
+/a/having a baby
+/a/heaven
+/a/hell
+/a/helen keller
+/a/helicopters
+/a/hiccups
+/a/high school
+/a/hillary clinton
+/a/hiv aids
+/a/hockey
+/a/homework
+/a/honey
+/a/hot tubs
+/a/hugs
+/a/hunters
+/a/ice cream
+/a/ice
+/a/in a coma
+/a/incense
+/a/india
+/a/indiana jones
+/a/indiana
+/a/industrial revolition
+/a/infomercials
+/a/ireland
+/a/jack the ripper
+/a/jackie chan
+/a/james bond
+/a/jail
+/a/jamaica
+/a/japan
+/a/jello
+/a/jennifer lopez
+/a/jim carrey
+/a/joan of arc
+/a/jfk
+/a/john lennon
+/a/johnny depp
+/a/jupiter
+/a/jurassic park
+/a/kangaroos
+/a/keanu reeves
+/a/king henry viii
+/a/king richard iii
+/a/king tut
+/a/kisses
+/a/king arthur
+/a/knives
+/a/labour unions
+/a/lawyers
+/a/leeches
+/a/leather
+/a/legs
+/a/lemons
+/a/lemonade
+/a/lethal injection
+/a/librarians
+/a/lightning strikes
+/a/liposuction
+/a/liver
+/a/llamas
+/a/lizards
+/a/lizard people
+/a/loch ness monster
+/a/loan sharks
+/a/lollipops
+/a/looney tunes
+/a/L.A
+/a/machine guns
+/a/mad cow disease
+/a/marie curie
+/a/madonna
+/a/maggots
+/a/mohandas gandhi
+/a/maple syrup
+/a/mardi gras
+/a/marriage
+/a/mars
+/a/martin luther king, jr.
+/a/me
+/a/memes
+/a/men
+/a/mice
+/a/mike pence
+/a/michael jackson
+/a/michelle pfeiffer
+/a/mickey mouse
+/a/microsoft
+/a/migraines
+/a/milk
+/a/milking a cow
+/a/money
+/a/monsters
+/a/mount vesuvius
+/a/mr. mangat
+/a/mr. shim
+/a/mr. timmerman
+/a/mr. pomakov
+/a/mr. d'aversa
+/a/mr. soloway
+/a/mr. fagan
+/a/mr. karo
+/a/mr. kotie
+/a/mr. kemp
+/a/mr. harris
+/a/mr. henry
+/a/mr. walker
+/a/mr. mackinlay
+/a/mr. cimetta
+/a/mr. ruytenbeek
+/a/ms. martin
+/a/ms. adamkowski
+/a/ms. chan
+/a/ms. sinatra
+/a/ms. wang
+/a/ms. coleman
+/a/ms. yip
+/a/ms. daniels
+/a/mtv
+/a/music
+/a/muhammad ali
+/a/mushrooms
+/a/mustard
+/a/my life
+/a/my love life
+/a/my face
+/a/my bank account
+/a/my dead body
+/a/my family
+/a/nasa
+/a/napoleon bonaparte
+/a/new orleans
+/a/nyc
+/a/niagara falls
+/a/nicholas cage
+/a/nighttime
+/a/nuts
+/a/nosebleeds
+/a/oatmeal
+/a/oil spills
+/a/oral surgery
+/a/oranges
+/a/osama bin laden
+/a/owls
+/a/outer space
+/a/pablo picasso
+/a/paris
+/a/paul mccartney
+/a/peaches
+/a/peanuts
+/a/pearls
+/a/picking your nose
+/a/pilots
+/a/pinocchio
+/a/play-doh
+/a/playing chess
+/a/pluto
+/a/poison ivy
+/a/pokemon
+/a/power rangers
+/a/prince charming
+/a/prince charles
+/a/prince william
+/a/princess diana
+/a/pubic hair
+/a/pyramids
+/a/queen elizabeth ii
+/a/quentin tarantino
+/a/quicksand
+/a/raccoons
+/a/rabbits
+/a/rice
+/a/riding a bike
+/a/richard nixon
+/a/rio de janeiro
+/a/road kill
+/a/robert deniro
+/a/robin hood
+/a/robots
+/a/romeo and juliet
+/a/rosie o'donell
+/a/rust
+/a/rusty nails
+/a/russia
+/a/saddam hussein
+/a/salt
+/a/salvador dali
+/a/samuel l jackson
+/a/screaming
+/a/screeching
+/a/sharks
+/a/shoplifting
+/a/skin
+/a/sleep
+/a/snow
+/a/soccer
+/a/soldiers
+/a/south africa
+/a/spaghetti
+/a/spiders
+/a/stars
+/a/swamps
+/a/terrorists
+/a/terrorist attacks
+/a/the cold war
+/a/the korean war
+/a/the vietnam war
+/a/the emu war
+/a/word war i
+/a/world war ii
+/a/world war iii
+/a/the titanic
+/n/absurd
+/n/addictive
+/n/adorable
+/n/amazing
+/n/american
+/n/ancient
+/n/annoying
+/n/appetizing
+/n/armed and dangerous
+/n/arrogant
+/n/attractive
+/n/awful
+/n/bad
+/n/beautiful
+/n/big
+/n/bitter
+/n/boring
+/n/bright
+/n/brilliant
+/n/brutal
+/n/bumpy
+/n/busy
+/n/calm
+/n/careful
+/n/casual
+/n/charismatic
+/n/charming
+/n/chewy
+/n/chunky
+/n/clean
+/n/clear
+/n/clever
+/n/clueless
+/n/clumsy
+/n/cold
+/n/colorful
+/n/complicated
+/n/confusing
+/n/controversial
+/n/cool
+/n/corrupt
+/n/cozy
+/n/cranky
+/n/crazy
+/n/creative
+/n/creepy
+/n/crisp
+/n/crispy
+/n/crooked
+/n/cruel
+/n/crunchy
+/n/cuddly
+/n/cute
+/n/dark
+/n/dead
+/n/deadly
+/n/delicious
+/n/demanding
+/n/desperate
+/n/dirty
+/n/disgusting
+/n/drunk
+/n/dull
+/n/dumb
+/n/dysfunctional
+/n/easy
+/n/edgy
+/n/elitist
+/n/emotional
+/n/enormous
+/n/european
+/n/exhausting
+/n/evil
+/n/explosive
+/n/fabulous
+/n/fast
+/n/filthy
+/n/fine
+/n/flat
+/n/foreign
+/n/fresh
+/n/fun to play with, not to eat
+/n/funky
+/n/good
+/n/great
+/n/hairy
+/n/handy
+/n/hard
+/n/harsh
+/n/haunting
+/n/hazardous
+/n/heavy
+/n/high
+/n/hot
+/n/hot and sweaty
+/n/huge
+/n/idiotic
+/n/innocent
+/n/insane
+/n/intelligent
+/n/insulting
+/n/intense
+/n/irritating
+/n/lazy
+/n/legendary
+/n/moist
+/n/non-existent
+/n/new and improved
+/n/neglected
+/n/noisy
+/n/nutty
+/n/rude
+/n/plump and tender
+/n/smooth and creamy

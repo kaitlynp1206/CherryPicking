@@ -1,3 +1,4 @@
+
 /**
  * Created by Elizabeth Ip on 2017-01-18.
  */
@@ -39,16 +40,24 @@ public class Client {
             ServerConnectionThread t=new ServerConnectionThread();//create a new thread to handle client/server messages
             t.start();//start the stupid thing
 
-            //this fragment constantly checks for user input and sends it to the server but i don't want that rn
-            /**i guess just copy the entire block here*/
+            /**this fragment constantly checks for user input and sends it to the server but i don't want that rn
             consoleReader = new BufferedReader(new InputStreamReader(System.in));
             while(reader.ready()) {//write to socket
                 msg=reader.readLine();
                 if(msg.contains("/chat/")) {//if the user wants to chat
                     writer.println("/chat/"+username+": "+msg.substring(6));//send the message - format: "/chat/username: message"
                 }
-            }
+            }**/
 
+        }catch(Exception e){
+            e.printStackTrace();
+        }
+    }
+
+    //gui uses this to send messages to the server
+    public void sendMessage(String s){
+        try{
+            writer.println(s);
         }catch(Exception e){
             e.printStackTrace();
         }
@@ -97,6 +106,7 @@ public class Client {
             }
         }//end constructor
 
+
         //runs the client side of every game
         public synchronized void run(){
             boolean validCard;
@@ -142,6 +152,7 @@ public class Client {
                             }
                         }
                     }
+                    //GUI gui=new GUI("localhost", 6666);//start the GUI
 
                     while (playing) {//game loop basically
                         if (reader.ready()) {//if server sent a message
@@ -156,6 +167,9 @@ public class Client {
                                     hand.add(new Card(msg.substring(0, msg.indexOf("(")), Integer.valueOf(msg.substring(msg.indexOf("(") + 1, msg.indexOf(")")))));
                                     msg = msg.substring(msg.indexOf("+") + 1);//remove first card from string
                                 }
+
+                               //gui.showCard(hand);//update the gui with hand
+
                                 System.out.println("YOUR HAND: ");//COPY THIS just for aesthetics
                                 for (Card c : hand) {//display cards with card numbers
                                     System.out.println("CARD " + c.getID() + ": " + c.getText());
